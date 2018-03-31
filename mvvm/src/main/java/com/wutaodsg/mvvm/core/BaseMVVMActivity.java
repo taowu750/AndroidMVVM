@@ -3,6 +3,7 @@ package com.wutaodsg.mvvm.core;
 import android.content.Intent;
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +26,7 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
         super.onCreate(savedInstanceState);
         mBaseViewProxy = new BaseViewProxy<>(this, this);
 
+        beforeCreateByIntent();
         Intent intent = getIntent();
         if (intent != null) {
             onCreateByIntent(intent);
@@ -38,6 +40,14 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
         mBaseViewProxy = null;
     }
 
+
+    /**
+     * 在 {@link #onCreateByIntent(Intent)} 之前调用。
+     */
+    @CallSuper
+    protected void beforeCreateByIntent() {
+
+    }
 
     /**
      * 当这个 Activity 被另一个 Activity 使用 Intent 启动时，会回调这个方法。

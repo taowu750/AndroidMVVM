@@ -2,6 +2,7 @@ package com.wutaodsg.mvvm.core;
 
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -34,6 +35,7 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
 
         mBaseViewProxy = new BaseViewProxy<>(this, this);
 
+        beforeCreateWithArgs();
         Bundle args = getArguments();
         if (args != null) {
             onCreateWithArgs(args);
@@ -47,6 +49,14 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
         mBaseViewProxy = null;
     }
 
+
+    /**
+     * 在 {@link #onCreateWithArgs(Bundle)} 方法之前调用。
+     */
+    @CallSuper
+    protected void beforeCreateWithArgs() {
+
+    }
 
     /**
      * 当这个 Fragment 被创建时使用了 {@link #setArguments(Bundle)} 方法设置了
