@@ -25,6 +25,11 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBaseViewProxy = new BaseViewProxy<>(this, this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         beforeCreateByIntent();
         Intent intent = getIntent();
@@ -42,7 +47,7 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
 
 
     /**
-     * 在 {@link #onCreateByIntent(Intent)} 之前调用。
+     * 在 {@link #onCreateByIntent(Intent)} 之前、{@link #onResume()} 之中被调用。
      */
     @CallSuper
     protected void beforeCreateByIntent() {
@@ -51,6 +56,8 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
 
     /**
      * 当这个 Activity 被另一个 Activity 使用 Intent 启动时，会回调这个方法。
+     * <p>
+     * 这个方法在 {@link #onResume()} 中被调用。
      *
      * @param intent 启动时传入的 Intent 参数
      */

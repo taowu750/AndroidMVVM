@@ -61,8 +61,10 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     /**
      * 当这个 Fragment 被创建时使用了 {@link #setArguments(Bundle)} 方法设置了
      * Bundle 参数，Bundle 将会传递到这个方法中。
+     * <p>
+     * 这个方法在与这个 Fragment 相关联的 Activity 被创建之后调用。
      *
-     * @param args
+     * @param args {@link #getArguments()} 的返回值
      */
     protected void onCreateWithArgs(@NonNull Bundle args) {
 
