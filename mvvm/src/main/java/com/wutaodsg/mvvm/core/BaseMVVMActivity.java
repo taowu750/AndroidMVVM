@@ -1,5 +1,6 @@
 package com.wutaodsg.mvvm.core;
 
+import android.content.Intent;
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -23,6 +24,11 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBaseViewProxy = new BaseViewProxy<>(this, this);
+
+        Intent intent = getIntent();
+        if (intent != null) {
+            onCreateByIntent(intent);
+        }
     }
 
     @Override
@@ -30,6 +36,16 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
         super.onDestroy();
         mBaseViewProxy.clear();
         mBaseViewProxy = null;
+    }
+
+
+    /**
+     * 当这个 Activity 被另一个 Activity 使用 Intent 启动时，会回调这个方法。
+     *
+     * @param intent 启动时传入的 Intent 参数
+     */
+    protected void onCreateByIntent(@NonNull Intent intent) {
+
     }
 
 
