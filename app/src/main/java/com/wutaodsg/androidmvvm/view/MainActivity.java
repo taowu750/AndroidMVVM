@@ -78,7 +78,7 @@ public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, Activi
             .create();
 
     @BindVariable(BR.loginButtonClickCommand)
-    public final ReplyCommand loginButtonClickCommand = new ReplyCommand(new Action0() {
+    private final ReplyCommand mLoginButtonClickCommand = new ReplyCommand(new Action0() {
         @Override
         public void execute() {
             getViewModel().login(mLoginCommand);

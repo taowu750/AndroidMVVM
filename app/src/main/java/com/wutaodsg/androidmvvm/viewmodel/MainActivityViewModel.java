@@ -29,13 +29,13 @@ public class MainActivityViewModel extends BaseViewModel {
      */
 
     @BindVariable(BR.userName)
-    public final ObservableField<String> userName = new ObservableField<>("");
+    private final ObservableField<String> mUserName = new ObservableField<>("");
 
     @BindVariable(BR.password)
-    public final ObservableField<String> password = new ObservableField<>("");
+    private final ObservableField<String> mPassword = new ObservableField<>("");
 
     @BindVariable(BR.errorMessage)
-    public final ObservableField<String> errorMessage = new ObservableField<>("");
+    private final ObservableField<String> mErrorMessage = new ObservableField<>("");
 
 
     /*
@@ -47,7 +47,7 @@ public class MainActivityViewModel extends BaseViewModel {
         Observable.OnPropertyChangedCallback inputChangeCallback = new Observable.OnPropertyChangedCallback() {
             @Override
             public void onPropertyChanged(Observable observable, int i) {
-                if (UserInfoConfirmUtil.isValidUserNameAndPassword(userName.get(), password.get())) {
+                if (UserInfoConfirmUtil.isValidUserNameAndPassword(mUserName.get(), mPassword.get())) {
 
                     confirmInputCommand.callExecutionStatus(true);
                 } else {
@@ -55,25 +55,25 @@ public class MainActivityViewModel extends BaseViewModel {
                 }
             }
         };
-        userName.addOnPropertyChangedCallback(inputChangeCallback);
-        password.addOnPropertyChangedCallback(inputChangeCallback);
+        mUserName.addOnPropertyChangedCallback(inputChangeCallback);
+        mPassword.addOnPropertyChangedCallback(inputChangeCallback);
     }
 
     public void login(final UICommand loginUICommand) {
         if (NetworkUtil.hasNetwork(getContext())) {
-            if (UserInfoConfirmUtil.isRegisteredUserNameAndPassword(userName.get(), password.get())) {
+            if (UserInfoConfirmUtil.isRegisteredUserNameAndPassword(mUserName.get(), mPassword.get())) {
                 loginUICommand.callOnStart();
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            UserLoginUtil.login(userName.get(), password.get());
+                            UserLoginUtil.login(mUserName.get(), mPassword.get());
                         } catch (InterruptedException e) {
                             loginUICommand.callHandler(new Runnable() {
                                 @Override
                                 public void run() {
                                     loginUICommand.callExecutionStatus(false);
-                                    errorMessage.set(ERROR_MESSAGE_USER_LOGIN_FAILED);
+                                    mErrorMessage.set(ERROR_MESSAGE_USER_LOGIN_FAILED);
                                 }
                             });
                         }
@@ -82,18 +82,18 @@ public class MainActivityViewModel extends BaseViewModel {
                             @Override
                             public void run() {
                                 loginUICommand.callExecutionStatus(true);
-                                errorMessage.set("");
+                                mErrorMessage.set("");
                             }
                         });
                     }
                 }).start();
             } else {
                 loginUICommand.callEnabled(false);
-                errorMessage.set(ERROR_MESSAGE_INVALID_INPUT);
+                mErrorMessage.set(ERROR_MESSAGE_INVALID_INPUT);
             }
         } else {
             loginUICommand.callEnabled(false);
-            errorMessage.set(ERROR_MESSAGE_NO_NETWORK);
+            mErrorMessage.set(ERROR_MESSAGE_NO_NETWORK);
         }
     }
 }
