@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- require boolean value to decide whether requestFocus for view. -->
+    <attr name="requestFocus" format="boolean" />
+    <!-- require ItemView or ItemViewSelector. -->
+    <attr name="itemView" format="reference" />
+    <!-- require List<ViewModel> bind to ItemView to presentation.-->
+    <attr name="items" format="reference" />
+    <!-- require a adapter which type of BindingRecyclerViewAdapter<T> to AdapterView-->
+    <attr name="adapter" format="reference" />
+
+    <attr name="onScrollChangeCommand" format="reference" />
+    <attr name="onScrollStateChangedCommand" format="reference" />
+    <attr name="uri" format="string" />
+    <attr name="onTouchCommand" format="reference" />
+
+    <!-- require ReplyCommand to deal with view click event. -->
+    <attr name="clickCommand" format="reference" />
+    <!-- require ResponseCommand to deal with view long click event -->
+    <attr name="longClickCommand" format="reference"/>
+    <!-- require ReplyCommand<Boolean> to deal with view focus change event.
+     ReplyCommand would has params which means if view hasFocus.-->
+    <attr name="onFocusChangeCommand" format="reference" />
+
+    <declare-styleable name="View">
+
+        <!-- require ReplyCommand to deal with view click event. -->
+        <attr name="clickCommand" />
+        <!-- require ResponseCommand to deal with view long click event. -->
+        <attr name="longClickCommand"/>
+        <!-- require ReplyCommand<Boolean> to deal with view focus change event.
+         ReplyCommand would has params which means if view hasFocus.-->
+        <attr name="onFocusChangeCommand" />
+        <!-- require ReplyCommand<MotionEvent> -->
+        <attr name="onTouchCommand" />
+    </declare-styleable>
+
+
+    <declare-styleable name="AdapterView">
+        <!-- require ReplyCommand<Integer> -->
+        <attr name="onScrollStateChangedCommand" />
+        <!-- require ReplyCommand<PageScrolledDataWrapper> -->
+        <attr name="onScrollChangeCommand" />
+        <!-- require ReplyCommand<Integer> count of list items-->
+        <attr name="onLoadMoreCommand" format="reference" />
+
+
+    </declare-styleable>
+
+    <declare-styleable name="TextView">
+        <attr name="clickCommand" />
+        <!-- require boolean value to decide whether requestFocus for view. -->
+        <attr name="requestFocus" />
+        <!--require ReplyCommand<TextChangeDataWrapper> -->
+        <attr name="beforeTextChangedCommand" format="reference" />
+        <!--require ReplyCommand<TextChangeDataWrapper> -->
+        <attr name="onTextChangedCommand" format="reference" />
+        <!--require ReplyCommand<String> -->
+        <attr name="afterTextChangedCommand" format="reference" />
+    </declare-styleable>
+
+
+    <declare-styleable name="ImageView">
+        <attr name="clickCommand" />
+        <!--&lt;!&ndash;  load bitmap from uri(string type) &ndash;&gt;-->
+        <!--<attr name="uri" />-->
+        <!--&lt;!&ndash;width for ResizeOptions (use Fresco to load bitmap). &ndash;&gt;-->
+        <!--<attr name="request_width" format="integer" />-->
+        <!--&lt;!&ndash;height for ResizeOptions (use Fresco to load bitmap). &ndash;&gt;-->
+        <!--<attr name="request_height" format="integer" />-->
+        <!--<attr name="placeholderImageRes" format="reference|color" />-->
+        <!--&lt;!&ndash;  require ReplyCommand<Bitmap> &ndash;&gt;-->
+        <!--<attr name="onSuccessCommand" format="reference" />-->
+        <!--&lt;!&ndash;require ReplyCommand<CloseableReference<CloseableImage>> &ndash;&gt;-->
+        <!--<attr name="onFailureCommand" format="reference" />-->
+
+    </declare-styleable>
+
+    <declare-styleable name="ViewGroup">
+        <attr name="clickCommand" />
+
+    </declare-styleable>
+
+    <declare-styleable name="RecyclerView" parent="AdapterView">
+
+    </declare-styleable>
+
+    <declare-styleable name="ListView" parent="AdapterView">
+        <!--require ReplyCommand<Integer> integer mean to position where is clicked! -->
+        <attr name="onItemClickCommand" format="reference" />
+        <!-- require ResponseCommand<Integer, Boolean>, integer mean to position where is long clicked,
+             boolean represent the return value! -->
+        <attr name="onItemLongClickCommand" format="reference"/>
+    </declare-styleable>
+
+    <declare-styleable name="ViewPager">
+        <!-- require PageTitles<T>-->
+        <attr name="pageTitles" format="reference" />
+        <!--require ReplyCommand<ViewPagerDataWrapper> -->
+        <attr name="onPageScrolledCommand" format="reference" />
+        <!--require ReplyCommand<Integer> -->
+        <attr name="onPageSelectedCommand" format="reference" />
+        <!--require ReplyCommand<Integer> -->
+        <attr name="onPageScrollStateChangedCommand" format="reference" />
+
+    </declare-styleable>
+
+    <declare-styleable name="NestedScrollView">
+        <!-- require ReplyCommand<NestedScrollDataWrapper> -->
+        <attr name="onScrollChangeCommand" />
+    </declare-styleable>
+
+    <declare-styleable name="ScrollView">
+        <!-- require ReplyCommand<PageScrolledDataWrapper> -->
+        <attr name="onScrollChangeCommand" />
+    </declare-styleable>
+
+    <declare-styleable name="SwipeRefreshLayout">
+        <!-- require RelayCommand -->
+        <attr name="onRefreshCommand" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="WebView">
+        <!-- require String render to html show in webview-->
+        <attr name="render" format="string" />
+    </declare-styleable>
+
+</resources>

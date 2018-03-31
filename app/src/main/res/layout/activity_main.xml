@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <data>
+        <import type="android.databinding.ObservableField"/>
+        <import type="com.wutaodsg.mvvm.command.ReplyCommand"/>
+        
+        <variable
+            name="userName"
+            type="ObservableField&lt;String&gt;"/>
+        <variable
+            name="password"
+            type="ObservableField&lt;String&gt;"/>
+        <variable
+            name="errorMessage"
+            type="ObservableField&lt;String&gt;"/>
+
+        <variable
+            name="loginButtonClickCommand"
+            type="ReplyCommand"/>
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/user_name_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:hint="请输入登陆名"
+            android:text="@={userName}"
+            android:textSize="15sp"
+            android:textColor="#000"/>
+
+        <EditText
+            android:id="@+id/password_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:inputType="textPassword"
+            android:hint="请输入密码"
+            android:text="@={password}"
+            android:textSize="15sp"
+            android:textColor="#000"/>
+
+        <Button
+            android:id="@+id/login_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:enabled="false"
+            android:background="@android:color/holo_green_light"
+            android:text="登陆"
+            android:textSize="15sp"
+            android:textColor="#fff"
+            app:clickCommand="@{loginButtonClickCommand}"/>
+
+        <TextView
+            android:id="@+id/error_message_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="@{errorMessage}"
+            android:textSize="15sp"
+            android:textColor="@android:color/holo_red_light"/>
+
+    </LinearLayout>
+
+</layout>
