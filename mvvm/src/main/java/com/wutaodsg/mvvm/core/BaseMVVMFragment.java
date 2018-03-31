@@ -25,7 +25,7 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(getLayoutResId(), container, true);
+        return inflater.inflate(getLayoutResId(), container, false);
     }
 
     @Override
