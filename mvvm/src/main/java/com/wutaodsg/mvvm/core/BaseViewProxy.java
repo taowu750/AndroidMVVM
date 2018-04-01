@@ -36,6 +36,7 @@ public class BaseViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
      *
      * @param fragmentActivity FragmentActivity 对象
      * @param coreView CoreView 对象，与参数 fragmentActivity 是同一个对象
+     * @param viewModel ViewModel 对象，也就是自定义的 ViewModel，{@link CoreView#newViewModel()}
      */
     @SuppressWarnings("unchecked")
     public BaseViewProxy(@NonNull FragmentActivity fragmentActivity,
@@ -69,6 +70,7 @@ public class BaseViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
      *
      * @param fragment Fragment 对象
      * @param coreView CoreView 对象，与参数 fragment 是同一个对象
+     * @param viewModel ViewModel 对象，也就是自定义的 ViewModel，{@link CoreView#newViewModel()}
      */
     @SuppressWarnings("unchecked")
     public BaseViewProxy(@NonNull Fragment fragment,
