@@ -25,14 +25,8 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(getLayoutResId(), container, false);
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
         mBaseViewProxy = new BaseViewProxy<>(this, this);
+        return inflater.inflate(getLayoutResId(), container, false);
     }
 
     @Override
