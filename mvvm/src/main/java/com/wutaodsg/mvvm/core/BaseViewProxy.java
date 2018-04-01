@@ -4,6 +4,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 
@@ -36,19 +37,22 @@ public class BaseViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
      * @param fragmentActivity FragmentActivity 对象
      * @param coreView CoreView 对象，与参数 fragmentActivity 是同一个对象
      */
+    @SuppressWarnings("unchecked")
     public BaseViewProxy(@NonNull FragmentActivity fragmentActivity,
-                         @NonNull CoreView<VM, DB> coreView) {
+                         @NonNull CoreView<VM, DB> coreView,
+                         @Nullable VM viewModel) {
         mCoreView = coreView;
+        mViewModel = viewModel;
         mDataBinding = DataBindingUtil.setContentView(fragmentActivity, mCoreView.getLayoutResId());
 
-        mCoreView.beforeBindViewModel();
         ViewModelType viewModelType = fragmentActivity.getClass().getAnnotation(ViewModelType.class);
         if (mViewModel == null && viewModelType != null) {
             try {
                 Class<VM> viewModelClass = (Class<VM>) viewModelType.value();
                 mViewModel = ViewModelProviders.of(fragmentActivity).get(viewModelClass);
             } catch (Exception e) {
-                throw new IllegalStateException("ViewModel creation failure! Check whether the ViewModel" +
+                throw new IllegalStateException(mCoreView.getClass().getName() + ": " +
+                        "ViewModel creation failure! Check whether the ViewModel" +
                         " referred to by the annotation  has a non-reference or default constructor." +
                         " Whether or not the ViewModel type is consistent with the generics");
             }
@@ -66,19 +70,22 @@ public class BaseViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
      * @param fragment Fragment 对象
      * @param coreView CoreView 对象，与参数 fragment 是同一个对象
      */
+    @SuppressWarnings("unchecked")
     public BaseViewProxy(@NonNull Fragment fragment,
-                         @NonNull CoreView<VM, DB> coreView) {
+                         @NonNull CoreView<VM, DB> coreView,
+                         @Nullable VM viewModel) {
         mCoreView = coreView;
+        mViewModel = viewModel;
         mDataBinding = DataBindingUtil.bind(fragment.getView());
 
-        mCoreView.beforeBindViewModel();
         ViewModelType viewModelType = fragment.getClass().getAnnotation(ViewModelType.class);
         if (mViewModel == null && viewModelType != null) {
             try {
                 Class<VM> viewModelClass = (Class<VM>) viewModelType.value();
                 mViewModel = ViewModelProviders.of(fragment).get(viewModelClass);
             } catch (Exception e) {
-                throw new IllegalStateException("ViewModel creation failure! Check whether the ViewModel" +
+                throw new IllegalStateException(mCoreView.getClass().getName() + ": " +
+                        "ViewModel creation failure! Check whether the ViewModel" +
                         " referred to by the annotation  has a non-reference or default constructor." +
                         " Whether or not the ViewModel type is consistent with the generics");
             }
@@ -93,16 +100,10 @@ public class BaseViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
     @NonNull
     public final VM getViewModel() {
         if (mViewModel == null) {
-            throw new IllegalStateException("No ViewModel were created!");
+            throw new IllegalStateException(mCoreView.getClass().getName() + ": No ViewModel were created!");
         }
 
         return mViewModel;
-    }
-
-    public final void setViewModel(@NonNull VM viewModel) {
-        if (mViewModel == null) {
-            mViewModel = viewModel;
-        }
     }
 
     @NonNull
@@ -139,7 +140,8 @@ public class BaseViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
                         field.setAccessible(true);
                         mDataBinding.setVariable(bindVariable.value(), field.get(dataBindingVariable));
                     } catch (IllegalAccessException e) {
-                        throw new IllegalStateException("Can't bind item according this field: " + field.getName());
+                        throw new IllegalStateException(mCoreView.getClass().getName() + ": " +
+                                "Can't bind item according this field: " + field.getName());
                     }
                 }
             }
@@ -155,7 +157,8 @@ public class BaseViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
                     field.setAccessible(true);
                     coreView.getLifecycle().addObserver((UIAwareComponent) field.get(coreView));
                 } catch (IllegalAccessException e) {
-                    throw new IllegalStateException("Can not add this UIAwareComponent: " + field.getName());
+                    throw new IllegalStateException(mCoreView.getClass().getName() + ": " +
+                            "Can not add this UIAwareComponent: " + field.getName());
                 }
             }
         }
@@ -170,7 +173,8 @@ public class BaseViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
                     field.setAccessible(true);
                     coreView.getLifecycle().removeObserver((UIAwareComponent) field.get(coreView));
                 } catch (IllegalAccessException e) {
-                    throw new IllegalStateException("Can not remove this UIAwareComponent: " + field.getName());
+                    throw new IllegalStateException(mCoreView.getClass().getName() + ": " +
+                            "Can not remove this UIAwareComponent: " + field.getName());
                 }
             }
         }

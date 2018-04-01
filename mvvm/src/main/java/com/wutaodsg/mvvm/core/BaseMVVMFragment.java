@@ -25,8 +25,14 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        mBaseViewProxy = new BaseViewProxy<>(this, this);
         return inflater.inflate(getLayoutResId(), container, false);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        mBaseViewProxy = new BaseViewProxy<>(this, this, newViewModel());
     }
 
     @Override
@@ -37,25 +43,50 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     }
 
 
-    @Override
-    public void beforeBindViewModel() {
-
-    }
-
+    /**
+     * 获取与这个 Fragment 绑定的 ViewModel 对象。
+     * <p>
+     * 如果 {@link BaseMVVMFragment} 还未创建成功，也就是它的 {@link #onActivityCreated(Bundle)} 方法还未
+     * 完全执行成，则会抛出 {@link IllegalStateException} 异常。
+     *
+     * @return 与这个 Fragment 绑定的 ViewModel 对象
+     * @throws IllegalStateException 如果 {@link BaseMVVMFragment} 还未创建成功，抛出此异常
+     */
     @Override
     @NonNull
     public final VM getViewModel() {
+        assertBaseViewProxy();
         return mBaseViewProxy.getViewModel();
     }
 
-    @Override
-    public final void setViewModel(@NonNull VM viewModel) {
-        mBaseViewProxy.setViewModel(viewModel);
-    }
-
+    /**
+     * 获取与这个 Fragment 绑定的 DataBinding 对象。
+     * <p>
+     * 如果 {@link BaseMVVMFragment} 还未创建成功，也就是它的 {@link #onActivityCreated(Bundle)} 方法还未
+     * 完全执行成，则会抛出 {@link IllegalStateException} 异常。
+     *
+     * @return 与这个 Fragment 绑定的 DataBinding 对象
+     * @throws IllegalStateException 如果 {@link BaseMVVMFragment} 还未创建成功，抛出此异常
+     */
     @Override
     @NonNull
     public final DB getDataBinding() {
+        assertBaseViewProxy();
         return mBaseViewProxy.getDataBinding();
+    }
+
+    @Nullable
+    @Override
+    public VM newViewModel() {
+        return null;
+    }
+
+
+    private void assertBaseViewProxy() {
+        if (mBaseViewProxy == null) {
+            throw new IllegalStateException(getClass().getName() + ": " +
+                    "The corresponding ViewModel and DataBinding are not bound." +
+                    "Because the \"" + BaseMVVMFragment.class.getName() + ".onCreate\" has not been fully executed");
+        }
     }
 }

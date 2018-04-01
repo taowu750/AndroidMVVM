@@ -22,7 +22,7 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mBaseViewProxy = new BaseViewProxy<>(this, this);
+        mBaseViewProxy = new BaseViewProxy<>(this, this, newViewModel());
     }
 
     @Override
@@ -33,25 +33,51 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     }
 
 
-    @Override
-    public void beforeBindViewModel() {
 
-    }
-
+    /**
+     * 获取与这个 Activity 绑定的 ViewModel 对象。
+     * <p>
+     * 如果 {@link BaseMVVMActivity} 还未创建成功，也就是它的 {@link #onCreate(Bundle)} 方法还未
+     * 完全执行成，则会抛出 {@link IllegalStateException} 异常。
+     *
+     * @return 与这个 Activity 绑定的 ViewModel 对象
+     * @throws IllegalStateException 如果 {@link BaseMVVMActivity} 还未创建成功，抛出此异常
+     */
     @Override
     @NonNull
     public final VM getViewModel() {
+        assertBaseViewProxy();
         return mBaseViewProxy.getViewModel();
     }
 
-    @Override
-    public final void setViewModel(@NonNull VM viewModel) {
-        mBaseViewProxy.setViewModel(viewModel);
-    }
-
+    /**
+     * 获取与这个 Activity 绑定的 DataBinding 对象。
+     * <p>
+     * 如果 {@link BaseMVVMActivity} 还未创建成功，也就是它的 {@link #onCreate(Bundle)} 方法还未
+     * 完全执行成，则会抛出 {@link IllegalStateException} 异常。
+     *
+     * @return 与这个 Activity 绑定的 DataBinding 对象
+     * @throws IllegalStateException 如果 {@link BaseMVVMActivity} 还未创建成功，抛出此异常
+     */
     @Override
     @NonNull
     public final DB getDataBinding() {
+        assertBaseViewProxy();
         return mBaseViewProxy.getDataBinding();
+    }
+
+    @Nullable
+    @Override
+    public VM newViewModel() {
+        return null;
+    }
+
+
+    private void assertBaseViewProxy() {
+        if (mBaseViewProxy == null) {
+            throw new IllegalStateException(getClass().getName() + ": " +
+                    "The corresponding ViewModel and DataBinding are not bound." +
+                    "Because the \"" + BaseMVVMActivity.class.getName() + ".onCreate\" has not been fully executed");
+        }
     }
 }

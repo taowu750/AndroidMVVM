@@ -3,6 +3,7 @@ package com.wutaodsg.mvvm.core;
 import android.arch.lifecycle.LifecycleOwner;
 import android.databinding.ViewDataBinding;
 import android.support.annotation.LayoutRes;
+import android.support.annotation.Nullable;
 
 /**
  * 扩展了基础 View 接口的功能，从而和 ViewModel、DataBinding Layout XML 具有了
@@ -15,13 +16,20 @@ public interface CoreView<VM extends BaseViewModel, DB extends ViewDataBinding>
         extends BaseView<VM, DB>, LifecycleOwner {
 
     /**
-     * 在 View 绑定 ViewModel 之前做一些操作<br/>
+     * 用来自定义想要创建的 ViewModel。
+     * <p>
      * 你可以在这个方法中通过 {@link android.arch.lifecycle.ViewModelProviders} 的
      * {@code of(FragmentActivity/Activity).get(Class)} 方法重新创建你想要的 ViewModel
-     * 对象（需要注意的是，此对象必须是 BaseViewModel 的子类），然后调用 {@link #setViewModel(BaseViewModel)}
-     * 方法设置你所创建的 ViewModel 对象。
+     * 对象（需要注意的是，此对象必须是 VM 泛型指定的类型）。
+     * <p>
+     * 这个方法创建的 ViewModel 在不为 null 的情况下，将会被优先绑定到 View 对象中.
+     * 也就是说使用 {@link ViewModelType} 注解指定的 ViewModel 会被此方法创建的
+     * ViewModel 覆盖掉。
+     * <p>
+     * 此方法返回值可以为 null。
      */
-    void beforeBindViewModel();
+    @Nullable
+    VM newViewModel();
 
     /**
      * 获取 View 对象的 DataBinding Layout XML 文件 id。

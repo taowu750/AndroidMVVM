@@ -22,14 +22,6 @@ public interface BaseView<VM extends BaseViewModel, DB extends ViewDataBinding> 
     VM getViewModel();
 
     /**
-     * 设置与 View 绑定的 ViewModel 对象。需要注意的是，这个方法只有在此 View 没有
-     * 绑定 ViewModel 时调用才会起作用，否则不会发生作用。
-     *
-     * @param viewModel 想要绑定在 View 上的 ViewModel 对象
-     */
-    void setViewModel(@NonNull VM viewModel);
-
-    /**
      * 返回 View 对象所绑定的 DataBinding 对象。
      *
      * @return DataBinding 对象
