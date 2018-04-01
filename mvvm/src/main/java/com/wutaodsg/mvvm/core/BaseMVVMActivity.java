@@ -1,9 +1,7 @@
 package com.wutaodsg.mvvm.core;
 
-import android.content.Intent;
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
-import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -28,41 +26,10 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        beforeCreateByIntent();
-        Intent intent = getIntent();
-        if (intent != null) {
-            onCreateByIntent(intent);
-        }
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         mBaseViewProxy.clear();
         mBaseViewProxy = null;
-    }
-
-
-    /**
-     * 在 {@link #onCreateByIntent(Intent)} 之前、{@link #onResume()} 之中被调用。
-     */
-    @CallSuper
-    protected void beforeCreateByIntent() {
-
-    }
-
-    /**
-     * 当这个 Activity 被另一个 Activity 使用 Intent 启动时，会回调这个方法。
-     * <p>
-     * 这个方法在 {@link #onResume()} 中被调用。
-     *
-     * @param intent 启动时传入的 Intent 参数
-     */
-    protected void onCreateByIntent(@NonNull Intent intent) {
-
     }
 
 

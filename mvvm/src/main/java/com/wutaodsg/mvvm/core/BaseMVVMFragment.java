@@ -2,7 +2,6 @@ package com.wutaodsg.mvvm.core;
 
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
-import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -34,12 +33,6 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
         super.onActivityCreated(savedInstanceState);
 
         mBaseViewProxy = new BaseViewProxy<>(this, this);
-
-        beforeCreateWithArgs();
-        Bundle args = getArguments();
-        if (args != null) {
-            onCreateWithArgs(args);
-        }
     }
 
     @Override
@@ -49,26 +42,6 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
         mBaseViewProxy = null;
     }
 
-
-    /**
-     * 在 {@link #onCreateWithArgs(Bundle)} 方法之前调用。
-     */
-    @CallSuper
-    protected void beforeCreateWithArgs() {
-
-    }
-
-    /**
-     * 当这个 Fragment 被创建时使用了 {@link #setArguments(Bundle)} 方法设置了
-     * Bundle 参数，Bundle 将会传递到这个方法中。
-     * <p>
-     * 这个方法在与这个 Fragment 相关联的 Activity 被创建之后调用。
-     *
-     * @param args {@link #getArguments()} 的返回值
-     */
-    protected void onCreateWithArgs(@NonNull Bundle args) {
-
-    }
 
     @Override
     public void beforeBindViewModel() {
