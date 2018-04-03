@@ -107,7 +107,7 @@
     </declare-styleable>
 
     <declare-styleable name="NestedScrollView">
-        <!-- require ReplyCommand<NestedScrollDataWrapper> -->
+        <!-- require ReplyCommNestedScrollChangeDataWrapperpper> -->
         <attr name="onScrollChangeCommand" />
     </declare-styleable>
 

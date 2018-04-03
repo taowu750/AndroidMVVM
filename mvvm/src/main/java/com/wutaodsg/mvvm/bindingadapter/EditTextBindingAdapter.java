@@ -9,9 +9,8 @@ import android.widget.EditText;
 
 import com.wutaodsg.mvvm.command.ReplyCommand;
 
-
 /**
- * Created by wutao on 2018/3/8.
+ * {@link EditText} 的 BindingAdapter。
  */
 
 public class EditTextBindingAdapter {
@@ -32,6 +31,13 @@ public class EditTextBindingAdapter {
 	到底要写在哪个EditText上呢?所以这里就需要焦点来介入了.只有获得了焦点的那个EditText,
 	才能获取软键盘的输入.
      */
+
+    /**
+     * 设置 EditText 的 requestFocus 属性，这个属性决定它是否可以获取到软键盘的焦点。
+     *
+     * @param editText     {@link EditText} 对象
+     * @param requestFocus 是否获取到软键盘的焦点
+     */
     @BindingAdapter({"requestFocus"})
     public static void requestFocusCommand(final EditText editText, final boolean requestFocus) {
         if (requestFocus) {
@@ -47,6 +53,18 @@ public class EditTextBindingAdapter {
         }
     }
 
+    /**
+     * 设置 EditText 的文本改变事件监听命令，有以下三个命令：
+     * <p>
+     * 1. <code>beforeTextChangedCommand</code>：文本改变前事件监听命令，参数为 {@link TextChangeDataWrapper}，表示文本改变前的数据；<br/>
+     * 2. <code>onTextChangedCommand</code>：    文本改变时事件监听命令，参数为 {@link TextChangeDataWrapper}，表示文本改变时的数据；<br/>
+     * 3. <code>afterTextChangedCommand</code>： 文本改变后事件监听命令，参数为 {@link String}，表示文本改变结束后的字符串对象。<br/>
+     *
+     * @param editText                 {@link EditText} 对象
+     * @param beforeTextChangedCommand {@link ReplyCommand} 对象，文本改变前事件监听命令
+     * @param onTextChangedCommand     {@link ReplyCommand} 对象，文本改变时事件监听命令
+     * @param afterTextChangedCommand  {@link ReplyCommand} 对象，文本改变后事件监听命令
+     */
     @BindingAdapter(value = {"beforeTextChangedCommand", "onTextChangedCommand", "afterTextChangedCommand"},
             requireAll = false)
     public static void setEditTextChangedCommand(final EditText editText,
@@ -80,6 +98,11 @@ public class EditTextBindingAdapter {
 
     /**
      * 用来封装 EditText 文本改变事件处理方法中的参数。
+     * <p>
+     * 1. 属性 {@link #s} 表示文本数据；<br/>
+     * 2. 属性 {@link #start} 表示文本开始的下标；<br/>
+     * 3. 属性 {@link #before} 表示之前文本的字符数；<br/>
+     * 4. 属性 {@link #count} 表示文本字符数。
      */
     public static class TextChangeDataWrapper {
 
