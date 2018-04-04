@@ -2,6 +2,7 @@ package com.wutaodsg.mvvm.core;
 
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -52,6 +53,7 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     @Override
     public void onDestroy() {
         super.onDestroy();
+        beforeDetach();
         mBaseViewProxy.clear();
         mBaseViewProxy = null;
     }
@@ -93,6 +95,12 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     @Override
     public VM newViewModel() {
         return null;
+    }
+
+    @Override
+    @CallSuper
+    public void beforeDetach() {
+
     }
 
 

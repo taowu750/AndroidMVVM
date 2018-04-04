@@ -2,6 +2,7 @@ package com.wutaodsg.mvvm.core;
 
 import android.arch.lifecycle.ViewModel;
 import android.content.Context;
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 
 /**
@@ -24,22 +25,29 @@ public class BaseViewModel extends ViewModel {
 
     /**
      * 绑定一个 Context 对象，这个 Context 由 V 层对象提供。<br/>
-     * 该方法不可被覆盖，它会在 V 层对象被创建的时候调用，并绑定 Context。
+     * 它会在 V 层对象被创建的时候调用，并绑定 Context。
      *
      * @param context Context 对象
      */
-    public final void onAttach(@NonNull Context context) {
+    @CallSuper
+    public void onAttach(@NonNull Context context) {
         mContext = context;
     }
 
     /**
      * 解绑 Context。<br/>
-     * 该方法不可被覆盖，它会在 V 层对象被销毁时被调用，并解绑 Context。
+     * 它会在 V 层对象被销毁时被调用，并解绑 Context。
      */
-    public final void onDetach() {
+    @CallSuper
+    public void onDetach() {
         mContext = null;
     }
 
+    /**
+     * 返回绑定在这个 ViewModel 上的 Context 对象。
+     *
+     * @return Context 对象
+     */
     public final Context getContext() {
         return mContext;
     }
