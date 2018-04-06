@@ -1,12 +1,13 @@
 package com.wutaodsg.androidmvvm.viewmodel;
 
-import android.databinding.Observable;
 import android.databinding.ObservableField;
+import android.util.Log;
 
 import com.android.databinding.library.baseAdapters.BR;
 import com.wutaodsg.androidmvvm.model.NetworkUtil;
 import com.wutaodsg.androidmvvm.model.UserInfoConfirmUtil;
 import com.wutaodsg.androidmvvm.model.UserLoginUtil;
+import com.wutaodsg.androidmvvm.view.MainActivity;
 import com.wutaodsg.mvvm.command.UICommand;
 import com.wutaodsg.mvvm.core.BaseViewModel;
 import com.wutaodsg.mvvm.core.BindVariable;
@@ -19,6 +20,9 @@ import com.wutaodsg.mvvm.core.BindVariable;
 
 public class MainActivityViewModel extends BaseViewModel {
 
+    private static final String TAG = MainActivity.TAG_PREFIX + "MainActivityVM";
+    
+    
     private static final String ERROR_MESSAGE_NO_NETWORK = "请连接网络";
     private static final String ERROR_MESSAGE_INVALID_INPUT = "用户名或密码不正确";
     private static final String ERROR_MESSAGE_USER_LOGIN_FAILED = "用户登录失败";
@@ -43,20 +47,9 @@ public class MainActivityViewModel extends BaseViewModel {
     我们需要用到回调接口的方式。
      */
 
-    public void listenOnInputUserNameAndPassword(final UICommand confirmInputCommand) {
-        Observable.OnPropertyChangedCallback inputChangeCallback = new Observable.OnPropertyChangedCallback() {
-            @Override
-            public void onPropertyChanged(Observable observable, int i) {
-                if (UserInfoConfirmUtil.isValidUserNameAndPassword(mUserName.get(), mPassword.get())) {
-
-                    confirmInputCommand.callExecutionStatus(true);
-                } else {
-                    confirmInputCommand.callExecutionStatus(false);
-                }
-            }
-        };
-        mUserName.addOnPropertyChangedCallback(inputChangeCallback);
-        mPassword.addOnPropertyChangedCallback(inputChangeCallback);
+    public boolean isInputInvalid() {
+        Log.d(TAG, "isInputInvalid: userName=" + mUserName.get() + ", password=" + mPassword.get());
+        return UserInfoConfirmUtil.isValidUserNameAndPassword(mUserName.get(), mPassword.get());
     }
 
     public void login(final UICommand loginUICommand) {

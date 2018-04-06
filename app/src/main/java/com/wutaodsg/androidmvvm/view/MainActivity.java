@@ -14,6 +14,7 @@ import com.wutaodsg.androidmvvm.databinding.ActivityMainBinding;
 import com.wutaodsg.androidmvvm.viewmodel.MainActivityViewModel;
 import com.wutaodsg.mvvm.command.Action0;
 import com.wutaodsg.mvvm.command.Action1;
+import com.wutaodsg.mvvm.command.Function0;
 import com.wutaodsg.mvvm.command.ReplyCommand;
 import com.wutaodsg.mvvm.command.UICommand;
 import com.wutaodsg.mvvm.core.BaseMVVMActivity;
@@ -35,14 +36,6 @@ public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, Activi
 
     private AlertDialog mLoginWaitingDialog;
 
-    private UICommand mConfirmInputCommand = new UICommand.Builder()
-            .setExecutionStatus(new Action1<Boolean>() {
-                @Override
-                public void execute(Boolean status) {
-                    getDataBinding().loginButton.setEnabled(status);
-                }
-            })
-            .create();
     private UICommand mLoginCommand = new UICommand.Builder()
             .setHandler(new Handler())
             .setEnabled(new Action1<Boolean>() {
@@ -83,6 +76,11 @@ public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, Activi
         public void execute() {
             getViewModel().login(mLoginCommand);
         }
+    }, new Function0<Boolean>() {
+        @Override
+        public Boolean call() {
+            return getViewModel().isInputInvalid();
+        }
     });
 
 
@@ -101,7 +99,5 @@ public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, Activi
                 .setMessage("请等待，正在登陆...")
                 .setCancelable(false)
                 .create();
-
-        getViewModel().listenOnInputUserNameAndPassword(mConfirmInputCommand);
     }
 }

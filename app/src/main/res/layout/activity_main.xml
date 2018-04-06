@@ -60,7 +60,6 @@
             android:layout_marginTop="20dp"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
-            android:enabled="false"
             android:background="@android:color/holo_green_light"
             android:text="登陆"
             android:textSize="15sp"
