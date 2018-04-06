@@ -180,23 +180,29 @@ public class ViewModelEventBus {
 
     /**
      * 取消在这个 eventTag 下注册的，所有接受数据类型为 dataClass 的 ViewModel 对象。
+     * 如果 dataClass 为 null，就注销所有不接受数据的 ViewModel 对象。
      *
      * @param eventTag  事件标志
-     * @param dataClass ViewModel 接受的数据类型
+     * @param dataClass ViewModel 接受的数据类型；值为 null 表示不接受数据
      * @return 取消注册成功返回 true，原来没有注册过返回 false
      */
     public <T> boolean unregister(@NonNull String eventTag,
-                                  @NonNull Class<T> dataClass) {
+                                  @Nullable Class<T> dataClass) {
+        Class dc = dataClass;
+        if (dc == null) {
+            dc = NoDataEventType.class;
+        }
+
         ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
                 eventMap = mEventBus.get(eventTag);
         if (eventMap != null) {
-            CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = eventMap.get(dataClass);
+            CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = eventMap.get(dc);
             if (viewModelCommands != null) {
                 for (ViewModelCommand viewModelCommand : viewModelCommands) {
                     viewModelCommand.clear();
                 }
                 viewModelCommands.clear();
-                eventMap.remove(dataClass);
+                eventMap.remove(dc);
 
                 return true;
             }
@@ -206,7 +212,7 @@ public class ViewModelEventBus {
     }
 
     /**
-     * 取消在这个 eventTag 下注册的 viewModel。
+     * 取消在这个 eventTag 下注册的 viewModel，这个 ViewModel 所有的注册记录都会被注销。
      *
      * @param eventTag  事件标志
      * @param viewModel 在这个 eventTag 下注册的 ViewModel 对象
@@ -235,19 +241,25 @@ public class ViewModelEventBus {
 
     /**
      * 取消在这个 eventTag 下注册的，接受数据类型为 dataClass 的 viewModel。
+     * 如果 dataClass 为 null，就注销不接受数据的 viewModel。
      *
      * @param eventTag  事件标志
-     * @param dataClass viewModel 接受的数据类型
+     * @param dataClass viewModel 接受的数据类型；值为 null 表示不接受数据
      * @param viewModel 在这个 eventTag 下注册的 ViewModel 对象
      * @return 取消注册成功返回 true，原来没有注册过返回 false
      */
     public <T> boolean unregister(@NonNull String eventTag,
-                                  @NonNull Class<T> dataClass,
+                                  @Nullable Class<T> dataClass,
                                   @NonNull BaseViewModel viewModel) {
+        Class dc = dataClass;
+        if (dc == null) {
+            dc = NoDataEventType.class;
+        }
+
         ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
                 eventMap = mEventBus.get(eventTag);
         if (eventMap != null) {
-            CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = eventMap.get(dataClass);
+            CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = eventMap.get(dc);
             if (viewModelCommands != null) {
                 for (ViewModelCommand viewModelCommand : viewModelCommands) {
                     if (viewModelCommand.getViewModel().equals(viewModel)) {
