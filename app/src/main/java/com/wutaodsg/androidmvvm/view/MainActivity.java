@@ -2,6 +2,7 @@ package com.wutaodsg.androidmvvm.view;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -61,6 +62,7 @@ public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, Activi
                         getDataBinding().errorMessageTextView.setVisibility(View.GONE);
                         Toast.makeText(MainActivity.this, "登陆成功！", Toast.LENGTH_SHORT)
                                 .show();
+                        startActivity(new Intent(MainActivity.this, TestViewModelEventBusActivity.class));
                     } else {
                         getDataBinding().errorMessageTextView.setVisibility(View.VISIBLE);
                         Toast.makeText(MainActivity.this, "登陆失败！", Toast.LENGTH_SHORT)

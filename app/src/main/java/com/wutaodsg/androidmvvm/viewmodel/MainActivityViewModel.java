@@ -1,7 +1,6 @@
 package com.wutaodsg.androidmvvm.viewmodel;
 
 import android.databinding.ObservableField;
-import android.util.Log;
 
 import com.android.databinding.library.baseAdapters.BR;
 import com.wutaodsg.androidmvvm.model.NetworkUtil;
@@ -48,7 +47,6 @@ public class MainActivityViewModel extends BaseViewModel {
      */
 
     public boolean isInputInvalid() {
-        Log.d(TAG, "isInputInvalid: userName=" + mUserName.get() + ", password=" + mPassword.get());
         return UserInfoConfirmUtil.isValidUserNameAndPassword(mUserName.get(), mPassword.get());
     }
 

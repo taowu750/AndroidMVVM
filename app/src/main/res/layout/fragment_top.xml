@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <import type="com.wutaodsg.mvvm.bindingadapter.EditTextBindingAdapter.TextChangeDataWrapper"/>
+
+
+        <variable
+            name="text"
+            type="android.databinding.ObservableField&lt;String&gt;"/>
+        
+        <variable
+            name="onTextChangeCommand"
+            type="com.wutaodsg.mvvm.command.ReplyCommand&lt;TextChangeDataWrapper&gt;"/>
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@android:color/holo_red_light">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TopFragment"
+            android:textSize="20sp"
+            android:textColor="#000"/>
+
+        <EditText
+            android:id="@+id/edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@={text}"
+            android:textColor="#000"
+            android:textSize="20sp"
+            android:hint="请在这里输入内容"
+            app:onTextChangedCommand="@{onTextChangeCommand}"/>
+
+    </LinearLayout>
+
+</layout>
