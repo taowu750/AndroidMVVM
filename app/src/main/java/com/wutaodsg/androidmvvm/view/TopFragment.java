@@ -4,6 +4,7 @@ import com.android.databinding.library.baseAdapters.BR;
 import com.wutaodsg.androidmvvm.R;
 import com.wutaodsg.androidmvvm.constant.ViewModelEventTags;
 import com.wutaodsg.androidmvvm.databinding.FragmentTopBinding;
+import com.wutaodsg.androidmvvm.viewmodel.BottomFragmentViewModel;
 import com.wutaodsg.androidmvvm.viewmodel.TopFragmentViewModel;
 import com.wutaodsg.mvvm.bindingadapter.EditTextBindingAdapter.TextChangeDataWrapper;
 import com.wutaodsg.mvvm.command.Action1;
@@ -30,7 +31,7 @@ public class TopFragment extends BaseMVVMFragment<TopFragmentViewModel, Fragment
         @Override
         public void execute(TextChangeDataWrapper textChangeDataWrapper) {
             boolean result = ViewModelEventBus.getInstance().post(ViewModelEventTags.TEXT,
-                    textChangeDataWrapper.s.toString());
+                    textChangeDataWrapper.s.toString(), BottomFragmentViewModel.class);
         }
     });
 

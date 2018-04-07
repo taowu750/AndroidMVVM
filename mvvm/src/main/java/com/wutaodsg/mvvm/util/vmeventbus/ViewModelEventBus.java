@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import com.wutaodsg.mvvm.core.BaseViewModel;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -44,6 +45,9 @@ public class ViewModelEventBus {
 
     private final ConcurrentHashMap<String, ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>>
             mEventBus = new ConcurrentHashMap<>();
+
+    private final ViewModelCommandCache mCacheWithData = new ViewModelCommandCache();
+    private final ViewModelCommandCache mCacheWithoutData = new ViewModelCommandCache();
 
 
     private ViewModelEventBus() {
@@ -344,6 +348,8 @@ public class ViewModelEventBus {
      * <p>
      * 这个方法所发送的事件面向这个 eventTag 下注册的所有 ViewModel 对象。
      * 而只有那些不接受数据的 ViewModel 对象会接受事件，并回调命令。
+     * <p>
+     * 这种发送事件的方式相当于广播。
      *
      * @param eventTag 事件标志
      * @return 当有 ViewModel 响应这个事件时返回 true，否则返回 false
@@ -370,6 +376,8 @@ public class ViewModelEventBus {
      * <p>
      * 这个方法所发送的事件面向这个 eventTag 下注册的所有 ViewModel 对象。
      * 而只有那些接收数据且数据类型与 data 相同的 ViewModel 对象会接受事件，并回调命令。
+     * <p>
+     * 这种发送事件的方式相当于广播。
      *
      * @param eventTag 事件标志
      * @param data     数据
@@ -399,6 +407,11 @@ public class ViewModelEventBus {
      * <p>
      * 这个方法所发送的事件面向这个 eventTag 下注册类型为 viewModelClass，
      * 并且接受数据类型与 data 相同的 viewModel。只有这个 viewModel 会接受事件并回调命令。
+     * <p>
+     * 这种发送命令的方式相当于点对点传播。
+     * <p>
+     * 这个方法还会缓存上一次的事件，如果这一次所发送的事件与上一次相同，
+     * 就无需再次进行查找操作，而是从缓存中读取数据并进行操作。
      *
      * @param eventTag       事件标志
      * @param data           数据
@@ -410,22 +423,29 @@ public class ViewModelEventBus {
                             @NonNull T data,
                             @NonNull Class<? extends BaseViewModel> viewModelClass) {
         Class dataClass = data.getClass();
-        ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
-                eventMap = mEventBus.get(eventTag);
-        if (eventMap != null) {
-            CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = eventMap.get(dataClass);
-            if (viewModelCommands != null) {
-                for (ViewModelCommand viewModelCommand : viewModelCommands) {
-                    if (viewModelCommand.getViewModel().getClass().equals(viewModelClass)) {
-                        viewModelCommand.execute(data);
+        if (mCacheWithData.cached(eventTag, dataClass, viewModelClass)) {
+            mCacheWithData.getCache().execute(data);
 
-                        return true;
+            return true;
+        } else {
+            ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
+                    eventMap = mEventBus.get(eventTag);
+            if (eventMap != null) {
+                CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = eventMap.get(dataClass);
+                if (viewModelCommands != null) {
+                    for (ViewModelCommand viewModelCommand : viewModelCommands) {
+                        if (viewModelCommand.getViewModel().getClass().equals(viewModelClass)) {
+                            viewModelCommand.execute(data);
+                            mCacheWithData.setCache(viewModelCommand);
+
+                            return true;
+                        }
                     }
                 }
             }
-        }
 
-        return false;
+            return false;
+        }
     }
 
     /**
@@ -433,6 +453,11 @@ public class ViewModelEventBus {
      * <p>
      * 这个方法所发送的事件面向这个 eventTag 下注册类型为 viewModelClass，
      * 并且不接受任何数据的 viewModel。只有这个 viewModel 会接受事件并回调命令。
+     * <p>
+     * 这种发送命令的方式相当于点对点传播。
+     * <p>
+     * 这个方法还会缓存上一次的事件，如果这一次所发送的事件与上一次相同，
+     * 就无需再次进行查找操作，而是从缓存中读取数据并进行操作。
      *
      * @param eventTag       事件标志
      * @param viewModelClass 指定 ViewModel 的类型
@@ -440,16 +465,23 @@ public class ViewModelEventBus {
      */
     public <T> boolean post(@NonNull String eventTag,
                             @NonNull Class<? extends BaseViewModel> viewModelClass) {
-        ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
-                eventMap = mEventBus.get(eventTag);
-        if (eventMap != null) {
-            CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = eventMap.get(NoDataEventType.class);
-            if (viewModelCommands != null) {
-                for (ViewModelCommand viewModelCommand : viewModelCommands) {
-                    if (viewModelCommand.getViewModel().getClass().equals(viewModelClass)) {
-                        viewModelCommand.execute();
+        if (mCacheWithoutData.cached(eventTag, NoDataEventType.class, viewModelClass)) {
+            mCacheWithoutData.getCache().execute();
 
-                        return true;
+            return true;
+        } else {
+            ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
+                    eventMap = mEventBus.get(eventTag);
+            if (eventMap != null) {
+                CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = eventMap.get(NoDataEventType.class);
+                if (viewModelCommands != null) {
+                    for (ViewModelCommand viewModelCommand : viewModelCommands) {
+                        if (viewModelCommand.getViewModel().getClass().equals(viewModelClass)) {
+                            viewModelCommand.execute();
+                            mCacheWithoutData.setCache(viewModelCommand);
+
+                            return true;
+                        }
                     }
                 }
             }
@@ -467,5 +499,54 @@ public class ViewModelEventBus {
      * 用来标志不接受数据的事件类型
      */
     private static final class NoDataEventType {
+    }
+
+
+    private static final class ViewModelCommandCache {
+
+        private String mEventTag;
+        private Class mDataClass;
+        private Class<? extends BaseViewModel> mViewModelClass;
+
+        private WeakReference<ViewModelCommand> mViewModelCommandRef;
+
+
+        public void setKey(String eventTag, Class dataClass, Class<? extends BaseViewModel> viewModelClass) {
+            mEventTag = eventTag;
+            mDataClass = dataClass;
+            mViewModelClass = viewModelClass;
+        }
+
+        public boolean cached(String eventTag, Class dataClass, Class<? extends BaseViewModel> viewModelClass) {
+            if (equals(mEventTag, eventTag) &&
+                    equals(mDataClass, dataClass) &&
+                    equals(mViewModelClass, mViewModelClass) &&
+                    mViewModelCommandRef != null &&
+                    mViewModelCommandRef.get() != null) {
+                return true;
+            } else {
+                setKey(eventTag, dataClass, viewModelClass);
+
+                return false;
+            }
+        }
+
+        public ViewModelCommand getCache() {
+            return mViewModelCommandRef != null ? mViewModelCommandRef.get() : null;
+        }
+
+        public void setCache(ViewModelCommand viewModelCommand) {
+            if (mViewModelCommandRef == null) {
+                mViewModelCommandRef = new WeakReference<>(viewModelCommand);
+            } else {
+                mViewModelCommandRef.clear();
+                mViewModelCommandRef = new WeakReference<>(viewModelCommand);
+            }
+        }
+
+
+        private <T> boolean equals(@Nullable T t1, @Nullable T t2) {
+            return t1 == null && t2 == null || t1 != null && t2 != null && t1.equals(t2);
+        }
     }
 }
