@@ -9,6 +9,7 @@ import com.wutaodsg.mvvm.core.BaseViewModel;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 /**
@@ -510,37 +511,47 @@ public class ViewModelEventBus {
 
         private WeakReference<ViewModelCommand> mViewModelCommandRef;
 
+        private ReentrantReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
+
 
         public void setKey(String eventTag, Class dataClass, Class<? extends BaseViewModel> viewModelClass) {
-            mEventTag = eventTag;
-            mDataClass = dataClass;
-            mViewModelClass = viewModelClass;
+            synchronized (this) {
+                mEventTag = eventTag;
+                mDataClass = dataClass;
+                mViewModelClass = viewModelClass;
+            }
         }
 
         public boolean cached(String eventTag, Class dataClass, Class<? extends BaseViewModel> viewModelClass) {
-            if (equals(mEventTag, eventTag) &&
-                    equals(mDataClass, dataClass) &&
-                    equals(mViewModelClass, mViewModelClass) &&
-                    mViewModelCommandRef != null &&
-                    mViewModelCommandRef.get() != null) {
-                return true;
-            } else {
-                setKey(eventTag, dataClass, viewModelClass);
+            synchronized (this) {
+                if (equals(mEventTag, eventTag) &&
+                        equals(mDataClass, dataClass) &&
+                        equals(mViewModelClass, mViewModelClass) &&
+                        mViewModelCommandRef != null &&
+                        mViewModelCommandRef.get() != null) {
+                    return true;
+                } else {
+                    setKey(eventTag, dataClass, viewModelClass);
 
-                return false;
+                    return false;
+                }
             }
         }
 
         public ViewModelCommand getCache() {
-            return mViewModelCommandRef != null ? mViewModelCommandRef.get() : null;
+            synchronized (this) {
+                return mViewModelCommandRef != null ? mViewModelCommandRef.get() : null;
+            }
         }
 
         public void setCache(ViewModelCommand viewModelCommand) {
-            if (mViewModelCommandRef == null) {
-                mViewModelCommandRef = new WeakReference<>(viewModelCommand);
-            } else {
-                mViewModelCommandRef.clear();
-                mViewModelCommandRef = new WeakReference<>(viewModelCommand);
+            synchronized (this) {
+                if (mViewModelCommandRef == null) {
+                    mViewModelCommandRef = new WeakReference<>(viewModelCommand);
+                } else {
+                    mViewModelCommandRef.clear();
+                    mViewModelCommandRef = new WeakReference<>(viewModelCommand);
+                }
             }
         }
 
