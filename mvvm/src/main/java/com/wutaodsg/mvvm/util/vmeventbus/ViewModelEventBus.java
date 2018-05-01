@@ -104,7 +104,7 @@ public class ViewModelEventBus {
                 eventMap.put(dataClass, viewModelCommands);
             }
         } else {
-            eventMap = new ConcurrentHashMap<>();
+            eventMap = new ConcurrentHashMap<>(2);
             CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = new CopyOnWriteArrayList<>();
             viewModelCommands.add(command);
             eventMap.put(dataClass, viewModelCommands);
@@ -148,7 +148,7 @@ public class ViewModelEventBus {
                 eventMap.put(NoDataEventType.class, viewModelCommands);
             }
         } else {
-            eventMap = new ConcurrentHashMap<>();
+            eventMap = new ConcurrentHashMap<>(2);
             CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = new CopyOnWriteArrayList<>();
             viewModelCommands.add(command);
             eventMap.put(NoDataEventType.class, viewModelCommands);

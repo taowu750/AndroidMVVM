@@ -40,6 +40,7 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle
             savedInstanceState) {
+        beforeBindView();
         return inflater.inflate(getLayoutResId(), container, false);
     }
 
@@ -95,6 +96,12 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     @Override
     public VM newViewModel() {
         return null;
+    }
+
+    @Override
+    @CallSuper
+    public void beforeBindView() {
+
     }
 
     @Override

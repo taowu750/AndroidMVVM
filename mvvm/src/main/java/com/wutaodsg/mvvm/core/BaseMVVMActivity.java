@@ -32,6 +32,7 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        beforeBindView();
         mBaseViewProxy = new BaseViewProxy<>(this, this, newViewModel());
     }
 
@@ -80,6 +81,12 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     @Override
     public VM newViewModel() {
         return null;
+    }
+
+    @Override
+    @CallSuper
+    public void beforeBindView() {
+
     }
 
     @Override

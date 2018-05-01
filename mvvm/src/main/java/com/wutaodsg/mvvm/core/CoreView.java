@@ -32,8 +32,14 @@ public interface CoreView<VM extends BaseViewModel, DB extends ViewDataBinding>
     VM newViewModel();
 
     /**
-     * 这个方法将在 View 被销毁时，解绑 ViewModel 和 DataBinding 之前被回调。
-     * 因此这允许你在解绑之前做一些数据保存等的工作。
+     * 这个方法将在 View 绑定 UI 视图（也就是 Layout XML 文件）之前调用。
+     * 此时，ViewModel 和 DataBinding 也都还没有绑定。
+     */
+    void beforeBindView();
+
+    /**
+     * 这个方法将在 View 被销毁时（一般是 onDestroy() 方法被调用的时候），
+     * 解绑 ViewModel 和 DataBinding 之前被回调。因此这允许你在解绑之前做一些数据保存等的工作。
      */
     void beforeDetach();
 
