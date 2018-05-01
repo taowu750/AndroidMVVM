@@ -64,7 +64,9 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
      * 获取与这个 Fragment 绑定的 ViewModel 对象。
      * <p>
      * 如果 {@link BaseMVVMFragment} 还未创建成功，也就是它的 {@link #onActivityCreated(Bundle)} 方法还未
-     * 完全执行成，则会抛出 {@link IllegalStateException} 异常。
+     * 完全执行成，则会抛出 {@link IllegalStateException} 异常。<br>
+     * 除此之外，在 onDestroy 方法中调用 getViewModel() 也会抛出异常，如果您有在此 Fragment
+     * 销毁时调用 getViewModel() 的必要，可以考虑在 beforeDetach() 回调方法中使用。
      *
      * @return 与这个 Fragment 绑定的 ViewModel 对象
      * @throws IllegalStateException 如果 {@link BaseMVVMFragment} 还未创建成功，抛出此异常
@@ -80,7 +82,9 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
      * 获取与这个 Fragment 绑定的 DataBinding 对象。
      * <p>
      * 如果 {@link BaseMVVMFragment} 还未创建成功，也就是它的 {@link #onActivityCreated(Bundle)} 方法还未
-     * 完全执行成，则会抛出 {@link IllegalStateException} 异常。
+     * 完全执行成，则会抛出 {@link IllegalStateException} 异常。<br>
+     * 除此之外，在 onDestroy 方法中调用 getDataBinding() 也会抛出异常，如果您有在此 Fragment
+     * 销毁时调用 getDataBinding() 的必要，可以考虑在 beforeDetach() 回调方法中使用。
      *
      * @return 与这个 Fragment 绑定的 DataBinding 对象
      * @throws IllegalStateException 如果 {@link BaseMVVMFragment} 还未创建成功，抛出此异常
@@ -114,9 +118,11 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     private void assertBaseViewProxy() {
         if (mBaseViewProxy == null) {
             throw new IllegalStateException(getClass().getName() + ": " +
-                    "The corresponding ViewModel and DataBinding are not bound. " +
+                    "The corresponding ViewModel and DataBinding are not bound or has been relieved of binding.\n" +
                     "Because the \"" + BaseMVVMFragment.class.getName() + ".onActivityCreated(Bundle)\" has not been " +
-                    "fully executed");
+                    "fully executed.\n" +
+                    "It is also possible that you invoked the getViewModel () or getDataBinding () method in " +
+                    "onDestroy ().");
         }
     }
 }
