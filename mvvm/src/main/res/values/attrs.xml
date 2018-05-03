@@ -119,6 +119,8 @@
     <declare-styleable name="SwipeRefreshLayout">
         <!-- require RelayCommand -->
         <attr name="onRefreshCommand" format="reference" />
+        <!-- require boolean -->
+        <attr name="refreshing" format="boolean"/>
     </declare-styleable>
 
     <declare-styleable name="WebView">

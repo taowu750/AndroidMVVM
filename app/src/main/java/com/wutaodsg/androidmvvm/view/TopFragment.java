@@ -1,5 +1,7 @@
 package com.wutaodsg.androidmvvm.view;
 
+import android.util.Log;
+
 import com.android.databinding.library.baseAdapters.BR;
 import com.wutaodsg.androidmvvm.R;
 import com.wutaodsg.androidmvvm.constant.ViewModelEventTags;
@@ -32,6 +34,7 @@ public class TopFragment extends BaseMVVMFragment<TopFragmentViewModel, Fragment
         public void execute(TextChangeDataWrapper textChangeDataWrapper) {
             boolean result = ViewModelEventBus.getInstance().post(ViewModelEventTags.TEXT,
                     textChangeDataWrapper.s.toString(), BottomFragmentViewModel.class);
+            Log.d(TAG, "onTextChangeCommand: result: " + result);
         }
     });
 

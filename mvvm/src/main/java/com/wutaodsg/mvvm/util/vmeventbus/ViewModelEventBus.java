@@ -9,7 +9,6 @@ import com.wutaodsg.mvvm.core.BaseViewModel;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 /**
@@ -43,6 +42,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 
 public class ViewModelEventBus {
+
+    private static final String TAG = "WuT.ViewModelEventBus";
+
 
     private final ConcurrentHashMap<String, ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>>
             mEventBus = new ConcurrentHashMap<>();
@@ -165,6 +167,13 @@ public class ViewModelEventBus {
      * @return 取消注册成功返回 true，原来没有注册过返回 false
      */
     public boolean unregister(@NonNull String eventTag) {
+        if (mCacheWithData.equals(eventTag)) {
+            mCacheWithData.clear();
+        }
+        if (mCacheWithoutData.equals(eventTag)) {
+            mCacheWithoutData.clear();
+        }
+
         ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
                 eventMap = mEventBus.get(eventTag);
         if (eventMap != null) {
@@ -198,6 +207,13 @@ public class ViewModelEventBus {
             dc = NoDataEventType.class;
         }
 
+        if (mCacheWithData.equals(eventTag, true, dc)) {
+            mCacheWithData.clear();
+        }
+        if (mCacheWithoutData.equals(eventTag, true, dc)) {
+            mCacheWithoutData.clear();
+        }
+
         ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
                 eventMap = mEventBus.get(eventTag);
         if (eventMap != null) {
@@ -225,17 +241,25 @@ public class ViewModelEventBus {
      */
     public boolean unregister(@NonNull String eventTag,
                               @NonNull BaseViewModel viewModel) {
+        if (mCacheWithData.equals(eventTag, false, viewModel.getClass())) {
+            mCacheWithData.clear();
+        }
+        if (mCacheWithoutData.equals(eventTag, false, viewModel.getClass())) {
+            mCacheWithoutData.clear();
+        }
+
         boolean result = false;
         ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
                 eventMap = mEventBus.get(eventTag);
         if (eventMap != null) {
             for (CopyOnWriteArrayList<ViewModelCommand> viewModelCommands : eventMap.values()) {
-                for (ViewModelCommand viewModelCommand : viewModelCommands) {
+                int size = viewModelCommands.size();
+                for (int i = 0; i < size; i++) {
+                    ViewModelCommand viewModelCommand = viewModelCommands.get(i);
                     if (viewModelCommand.getViewModel().equals(viewModel)) {
-                        viewModelCommands.remove(viewModelCommand);
                         viewModelCommand.clear();
+                        viewModelCommands.remove(i);
                         result = true;
-                        break;
                     }
                 }
             }
@@ -261,15 +285,24 @@ public class ViewModelEventBus {
             dc = NoDataEventType.class;
         }
 
+        if (mCacheWithData.equals(eventTag, dc, viewModel.getClass())) {
+            mCacheWithData.clear();
+        }
+        if (mCacheWithoutData.equals(eventTag, dc, viewModel.getClass())) {
+            mCacheWithoutData.clear();
+        }
+
         ConcurrentHashMap<Class, CopyOnWriteArrayList<ViewModelCommand>>
                 eventMap = mEventBus.get(eventTag);
         if (eventMap != null) {
             CopyOnWriteArrayList<ViewModelCommand> viewModelCommands = eventMap.get(dc);
             if (viewModelCommands != null) {
-                for (ViewModelCommand viewModelCommand : viewModelCommands) {
+                int size = viewModelCommands.size();
+                for (int i = 0; i < size; i++) {
+                    ViewModelCommand viewModelCommand = viewModelCommands.get(i);
                     if (viewModelCommand.getViewModel().equals(viewModel)) {
-                        viewModelCommands.remove(viewModelCommand);
                         viewModelCommand.clear();
+                        viewModelCommands.remove(i);
 
                         return true;
                     }
@@ -511,8 +544,6 @@ public class ViewModelEventBus {
 
         private WeakReference<ViewModelCommand> mViewModelCommandRef;
 
-        private ReentrantReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
-
 
         public void setKey(String eventTag, Class dataClass, Class<? extends BaseViewModel> viewModelClass) {
             synchronized (this) {
@@ -553,6 +584,44 @@ public class ViewModelEventBus {
                     mViewModelCommandRef = new WeakReference<>(viewModelCommand);
                 }
             }
+        }
+
+        public boolean equals(@NonNull String eventTag) {
+            synchronized (this) {
+                return eventTag.equals(mEventTag);
+            }
+        }
+
+        public boolean equals(@NonNull String eventTag,
+                              boolean isDataClass,
+                              @NonNull Class dataClass) {
+            synchronized (this) {
+                if (isDataClass) {
+                    return eventTag.equals(mEventTag) && dataClass.equals(mDataClass);
+                } else {
+                    return eventTag.equals(mEventTag) && dataClass.equals(mViewModelClass);
+                }
+            }
+        }
+
+        public boolean equals(@NonNull String eventTag,
+                              @NonNull Class dataClass,
+                              @NonNull Class<? extends BaseViewModel> viewModelClass) {
+            synchronized (this) {
+                return eventTag.equals(mEventTag) &&
+                        dataClass.equals(mDataClass) &&
+                        viewModelClass.equals(mViewModelClass);
+            }
+        }
+
+        public void clear() {
+            mEventTag = null;
+            mDataClass = null;
+            mViewModelClass = null;
+            if (mViewModelCommandRef != null) {
+                mViewModelCommandRef.clear();
+            }
+            mViewModelCommandRef = null;
         }
 
 

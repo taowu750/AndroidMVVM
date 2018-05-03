@@ -55,7 +55,8 @@ public class ViewModelCommand<T> {
 
     @Override
     public boolean equals(Object obj) {
-        return mViewModel.equals(obj);
+        return obj instanceof ViewModelCommand && mViewModel != null && mViewModel.equals(obj);
+
     }
 
     @NonNull
