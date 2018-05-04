@@ -20,6 +20,8 @@
         </activity>
         <activity android:name=".view.TestViewModelEventBusActivity">
         </activity>
+        <activity android:name=".view.ChildViewActivity">
+        </activity>
     </application>
 
 </manifest>

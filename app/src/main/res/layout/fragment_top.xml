@@ -14,6 +14,9 @@
         <variable
             name="onTextChangeCommand"
             type="com.wutaodsg.mvvm.command.ReplyCommand&lt;TextChangeDataWrapper&gt;"/>
+        <variable
+            name="openChildViewClickCommand"
+            type="com.wutaodsg.mvvm.command.ReplyCommand"/>
     </data>
 
     <LinearLayout
@@ -38,6 +41,17 @@
             android:textSize="20sp"
             android:hint="请在这里输入内容"
             app:onTextChangedCommand="@{onTextChangeCommand}"/>
+
+        <Button
+            android:id="@+id/open_child_view_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:textAllCaps="false"
+            android:text="ChildView Demo"
+            app:clickCommand="@{openChildViewClickCommand}"/>
 
     </LinearLayout>
 

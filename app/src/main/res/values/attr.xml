@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- required ResponseCommand -->
+    <attr name="onItemSelectedCommand" format="reference"/>
+    <!-- required menu id -->
+    <attr name="checkedItem" format="integer"/>
+
+    <declare-styleable name="NavigationView">
+        <attr name="onItemSelectedCommand"/>
+        <attr name="checkedItem"/>
+    </declare-styleable>
+</resources>

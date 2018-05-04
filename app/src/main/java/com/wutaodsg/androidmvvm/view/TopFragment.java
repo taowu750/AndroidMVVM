@@ -1,5 +1,6 @@
 package com.wutaodsg.androidmvvm.view;
 
+import android.content.Intent;
 import android.util.Log;
 
 import com.android.databinding.library.baseAdapters.BR;
@@ -9,6 +10,7 @@ import com.wutaodsg.androidmvvm.databinding.FragmentTopBinding;
 import com.wutaodsg.androidmvvm.viewmodel.BottomFragmentViewModel;
 import com.wutaodsg.androidmvvm.viewmodel.TopFragmentViewModel;
 import com.wutaodsg.mvvm.bindingadapter.EditTextBindingAdapter.TextChangeDataWrapper;
+import com.wutaodsg.mvvm.command.Action0;
 import com.wutaodsg.mvvm.command.Action1;
 import com.wutaodsg.mvvm.command.ReplyCommand;
 import com.wutaodsg.mvvm.core.BaseMVVMFragment;
@@ -35,6 +37,14 @@ public class TopFragment extends BaseMVVMFragment<TopFragmentViewModel, Fragment
             boolean result = ViewModelEventBus.getInstance().post(ViewModelEventTags.TEXT,
                     textChangeDataWrapper.s.toString(), BottomFragmentViewModel.class);
             Log.d(TAG, "onTextChangeCommand: result: " + result);
+        }
+    });
+
+    @BindVariable(BR.openChildViewClickCommand)
+    private final ReplyCommand mOpenChildViewClickCommand = new ReplyCommand(new Action0() {
+        @Override
+        public void execute() {
+            startActivity(new Intent(getContext(), ChildViewActivity.class));
         }
     });
 

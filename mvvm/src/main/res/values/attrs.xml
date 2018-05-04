@@ -82,11 +82,11 @@
 
     </declare-styleable>
 
-    <declare-styleable name="RecyclerView" parent="AdapterView">
+    <declare-styleable name="RecyclerView" container="AdapterView">
 
     </declare-styleable>
 
-    <declare-styleable name="ListView" parent="AdapterView">
+    <declare-styleable name="ListView" container="AdapterView">
         <!--require ReplyCommand<Integer> integer mean to position where is clicked! -->
         <attr name="onItemClickCommand" format="reference" />
         <!-- require ResponseCommand<Integer, Boolean>, integer mean to position where is long clicked,
