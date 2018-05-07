@@ -18,6 +18,7 @@ import java.util.Map;
 /**
  * <p>
  *     View 对象的代理类，实现了 {@link BaseView} 和 {@link ParentView} 接口。
+ *     它是框架底层代码的核心类之一。
  * </p>
  * <p>
  *     它在内部提供了对 View 所需要的 ViewModel 和 DataBinding 的创建和绑定操作。
