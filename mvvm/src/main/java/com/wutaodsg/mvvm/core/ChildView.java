@@ -17,31 +17,33 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- *     此类代表一个子 View。子 View 被一般被父 View（即 {@link BaseMVVMActivity} 或 {@link BaseMVVMFragment}）
- *     包含。也就是说，子 View 一般存在于父 View 中，比如父 Layout XML 文件中的
- *     &lt;include&gt; 所引用的子 View；或者 Layout XML 上控件所引用的视图，比如
- *     NavigationView 的 app:headerLayout 属性所表示的视图。<br/>
- *     在父 View 的 Layout XML 中，需要为包含子 View 的容器设置一个 id，用来指定
- *     子 View 的位置。
+ * 此类代表一个子 View。子 View 被一般被父 View（即 {@link BaseMVVMActivity} 或 {@link BaseMVVMFragment}）
+ * 包含。也就是说，子 View 一般存在于父 View 中，比如父 Layout XML 文件中的
+ * &lt;include&gt; 所引用的子 View；或者 Layout XML 上控件所引用的视图，比如
+ * NavigationView 的 app:headerLayout 属性所表示的视图。<br/>
+ * 在父 View 的 Layout XML 中，需要为包含子 View 的容器设置一个 id，用来指定
+ * 子 View 的位置。
  * </p>
  * <p>
- *     ChildView 实现了 {@link CoreView}。此外，它也具有生命周期函数：{@link #onCreate(Bundle)}、
- *     {@link #onStart()}、{@link #onResume()}、{@link #onPause()}、{@link #onStop()}、
- *     {@link #onDestroy()}，这些生命周期函数会在父 View 的对于方法中被调用。
+ * ChildView 实现了 {@link CoreView}。此外，它也具有生命周期函数：{@link #onCreate(Bundle)}、
+ * {@link #onStart()}、{@link #onResume()}、{@link #onPause()}、{@link #onStop()}、
+ * {@link #onDestroy()}，这些生命周期函数会在父 View 的对于方法中被调用。
  * </p>
  * <p>
- *     ChildView 保存了它的父 View 的引用，它的容器的引用，以及一个 Context。
- *     如果 ChildView 的父 View 是 {@link BaseMVVMActivity}，可以使用
- *     {@link #getParentActivity()} 获取这个引用；如果 ChildView 的父 View
- *     是 {@link BaseMVVMFragment}，可以使用 {@link #getParentFragment()}
- *     获取这个引用。<br/>
+ * ChildView 保存了它的父 View 的引用，它的容器的引用，以及一个 Context。
+ * 如果 ChildView 的父 View 是 {@link BaseMVVMActivity}，可以使用
+ * {@link #getParentActivity()} 获取这个引用；如果 ChildView 的父 View
+ * 是 {@link BaseMVVMFragment}，可以使用 {@link #getParentFragment()}
+ * 获取这个引用。<br/>
+ * 还可以使用 {@link #getParentActivity(Class)} 或 {@link #getParentFragment(Class)}
+ * 获取更加精确的类型。
  * </p>
  * <p>
- *     在父 View 上使用 {@link BindChildView} 或 {@link BindChildViews} 注解
- *     来声明 ChildView。
+ * 在父 View 上使用 {@link BindChildView} 或 {@link BindChildViews} 注解
+ * 来声明 ChildView。
  * </p>
  * <p>
- *     需要注意的是，ChildView 必须有一个无参构造器，否则框架将无法正确的构造它。
+ * 需要注意的是，ChildView 必须有一个无参构造器，否则框架将无法正确的构造它。
  * </p>
  */
 
@@ -206,6 +208,52 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
     }
 
     /**
+     * 如果此 ChildView 父 Activity 的类型与参数 parentActivityClass 表示的类型
+     * 相同，返回这个 ChildView 的父 Activity；如果不相同或者此 ChildView 的父
+     * Activity 为 null，返回 null。
+     *
+     * @param parentActivityClass 表示此 ChildView 父 Activity 的类型
+     * @param <PVM>               父 Activity 的 ViewModel 类型
+     * @param <PDB>               父 Activity 的 DataBinding 类型
+     * @param <PA>                父 Activity 的类型
+     * @return 父 Activity 引用或 null
+     */
+    @SuppressWarnings("unchecked")
+    public final <PVM extends BaseViewModel, PDB extends ViewDataBinding, PA extends BaseMVVMActivity<PVM, PDB>>
+    PA getParentActivity(@NonNull Class<PA> parentActivityClass) {
+        if (mParentActivity != null) {
+            if (mParentActivity.getClass().equals(parentActivityClass)) {
+                return (PA) mParentActivity;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 如果此 ChildView 父 Fragment 的类型与参数 parentFragmentClass 表示的类型
+     * 相同，返回这个 ChildView 的父 Fragment；如果不相同或者此 ChildView 的父
+     * Fragment 为 null，返回 null。
+     *
+     * @param parentFragmentClass 表示此 ChildView 父 Fragment 的类型
+     * @param <PVM>               父 Fragment 的 ViewModel 类型
+     * @param <PDB>               父 Fragment 的 DataBinding 类型
+     * @param <PF>                父 Fragment 的类型
+     * @return 父 Fragment 引用或 null
+     */
+    @SuppressWarnings("unchecked")
+    public final <PVM extends BaseViewModel, PDB extends ViewDataBinding, PF extends BaseMVVMFragment<PVM, PDB>>
+    PF getParentFragment(@NonNull Class<PF> parentFragmentClass) {
+        if (mParentFragment != null) {
+            if (mParentFragment.getClass().equals(parentFragmentClass)) {
+                return (PF) mParentFragment;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * 返回与此 ChildView 绑定的 Context 对象。
      *
      * @return {@link Context} 对象
@@ -229,7 +277,8 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
     @IntDef({PARENT_TYPE_ACTIVITY, PARENT_TYPE_FRAGMENT})
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.METHOD})
-    public @interface ParentType {}
+    public @interface ParentType {
+    }
 
 
     void setViewModel(@NonNull VM viewModel) {

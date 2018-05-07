@@ -26,6 +26,10 @@ public class NavHeaderView extends ChildView<NavHeaderViewVM, NavHeaderBinding> 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate: parent activity: " + getParentActivity());
+
+        ChildViewActivity parent = getParentActivity(ChildViewActivity.class);
+        Log.d(TAG, "onCreate: parent: " + parent);
+        Log.d(TAG, "onCreate: context: " + getContext());
+        Log.d(TAG, "onCreate: container: " + getContainer());
     }
 }
