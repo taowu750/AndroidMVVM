@@ -10,6 +10,11 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * 线性分割线，用在 RecyclerView 中，可以是水平或垂直的。<br/>
  * 原理参见 http://www.jianshu.com/p/4eff036360da
@@ -87,6 +92,8 @@ public class LineDivider extends RecyclerView.ItemDecoration {
     }
 
 
+    @Retention(RetentionPolicy.SOURCE)
+    @Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
     @IntDef({LinearLayoutManager.VERTICAL, LinearLayoutManager.HORIZONTAL})
     @interface OrientationType {
     }

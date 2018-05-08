@@ -275,7 +275,7 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
 
 
     @IntDef({PARENT_TYPE_ACTIVITY, PARENT_TYPE_FRAGMENT})
-    @Retention(RetentionPolicy.RUNTIME)
+    @Retention(RetentionPolicy.SOURCE)
     @Target({ElementType.FIELD, ElementType.METHOD})
     public @interface ParentType {
     }

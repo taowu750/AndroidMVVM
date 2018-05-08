@@ -142,7 +142,7 @@ public class LogUtils {
     }
 
 
-    @Retention(RetentionPolicy.RUNTIME)
+    @Retention(RetentionPolicy.SOURCE)
     @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
     @IntDef({VERBOSE, DEBUG, INFO, WARN, ERROR, NOTHING})
     @interface LevelType {}
