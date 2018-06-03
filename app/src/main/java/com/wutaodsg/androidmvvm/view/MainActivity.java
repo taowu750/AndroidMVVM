@@ -30,11 +30,6 @@ import com.wutaodsg.mvvm.core.ViewModelType;
 @ViewModelType(MainActivityViewModel.class)
 public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, ActivityMainBinding> {
 
-    public static final String TAG_PREFIX = "WuT.";
-
-    private static final String TAG = TAG_PREFIX + "MainActivity";
-
-
     private AlertDialog mLoginWaitingDialog;
 
     private UICommand mLoginCommand = new UICommand.Builder()
@@ -70,7 +65,7 @@ public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, Activi
                     }
                 }
             })
-            .create();
+            .build();
 
     @BindVariable(BR.loginButtonClickCommand)
     private final ReplyCommand mLoginButtonClickCommand = new ReplyCommand(new Action0() {
@@ -93,7 +88,7 @@ public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, Activi
 
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mLoginWaitingDialog = new ProgressDialog.Builder(this)
@@ -101,5 +96,7 @@ public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, Activi
                 .setMessage("请等待，正在登陆...")
                 .setCancelable(false)
                 .create();
+
+        startActivity(new Intent(this, ChildViewActivity.class));
     }
 }

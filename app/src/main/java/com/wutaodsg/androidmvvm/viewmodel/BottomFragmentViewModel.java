@@ -3,14 +3,13 @@ package com.wutaodsg.androidmvvm.viewmodel;
 import android.content.Context;
 import android.databinding.ObservableField;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.android.databinding.library.baseAdapters.BR;
 import com.wutaodsg.androidmvvm.constant.ViewModelEventTags;
-import com.wutaodsg.androidmvvm.view.MainActivity;
 import com.wutaodsg.mvvm.command.Action1;
 import com.wutaodsg.mvvm.core.BaseViewModel;
 import com.wutaodsg.mvvm.core.BindVariable;
+import com.wutaodsg.mvvm.util.log.LogUtils;
 import com.wutaodsg.mvvm.util.vmeventbus.ViewModelCommand;
 import com.wutaodsg.mvvm.util.vmeventbus.ViewModelEventBus;
 import com.wutaodsg.mvvm.util.vmeventbus.ViewModelSchedulers;
@@ -22,7 +21,7 @@ import com.wutaodsg.mvvm.util.vmeventbus.ViewModelSchedulers;
 
 public class BottomFragmentViewModel extends BaseViewModel {
 
-    private static final String TAG = MainActivity.TAG_PREFIX + "BottomFragmentVM";
+    private static final String TAG = "BottomFragmentVM";
     
 
     @BindVariable(BR.text)
@@ -39,7 +38,7 @@ public class BottomFragmentViewModel extends BaseViewModel {
                         setText(s);
                     }
                 }, ViewModelSchedulers.mainThread()));
-        Log.d(TAG, "onAttach: register: " + result);
+        LogUtils.d(TAG, "onAttach: register: " + result);
     }
 
     @Override
@@ -47,7 +46,7 @@ public class BottomFragmentViewModel extends BaseViewModel {
         super.onCleared();
         boolean result = ViewModelEventBus.getInstance().unregister(ViewModelEventTags.TEXT, String.class,
                 this);
-        Log.d(TAG, "onCleared: unregister: " + result);
+        LogUtils.d(TAG, "onCleared: unregister: " + result);
     }
 
 

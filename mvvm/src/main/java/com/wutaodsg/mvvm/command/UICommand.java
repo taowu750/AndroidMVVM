@@ -193,43 +193,43 @@ public class UICommand<RESULT, PROGRESS> implements UIAwareComponent {
         private Action1<RESULT> mExecutionResult;
 
 
-        public Builder setHandler(@NonNull final Handler handler) {
+        public Builder<RESULT, PROGRESS> setHandler(@NonNull final Handler handler) {
             mHandler = handler;
 
             return this;
         }
 
-        public Builder setEnabled(@NonNull final Action1<Boolean> enabled) {
+        public Builder<RESULT, PROGRESS> setEnabled(@NonNull final Action1<Boolean> enabled) {
             mEnabled = enabled;
 
             return this;
         }
 
-        public Builder setOnStart(@NonNull final Action0 onStart) {
+        public Builder<RESULT, PROGRESS> setOnStart(@NonNull final Action0 onStart) {
             mOnStart = onStart;
 
             return this;
         }
 
-        public Builder setOnProgress(@NonNull final Action1<PROGRESS> onProgress) {
+        public Builder<RESULT, PROGRESS> setOnProgress(@NonNull final Action1<PROGRESS> onProgress) {
             mOnProgress = onProgress;
 
             return this;
         }
 
-        public Builder setExecutionStatus(@NonNull final Action1<Boolean> executionStatus) {
+        public Builder<RESULT, PROGRESS> setExecutionStatus(@NonNull final Action1<Boolean> executionStatus) {
             mExecutionStatus = executionStatus;
 
             return this;
         }
 
-        public Builder setExecutionResult(@NonNull final Action1<RESULT> executionResult) {
+        public Builder<RESULT, PROGRESS> setExecutionResult(@NonNull final Action1<RESULT> executionResult) {
             mExecutionResult = executionResult;
 
             return this;
         }
 
-        public UICommand<RESULT, PROGRESS> create() {
+        public UICommand<RESULT, PROGRESS> build() {
             return new UICommand<>(this);
         }
     }

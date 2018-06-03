@@ -6,7 +6,6 @@ import com.android.databinding.library.baseAdapters.BR;
 import com.wutaodsg.androidmvvm.model.NetworkUtil;
 import com.wutaodsg.androidmvvm.model.UserInfoConfirmUtil;
 import com.wutaodsg.androidmvvm.model.UserLoginUtil;
-import com.wutaodsg.androidmvvm.view.MainActivity;
 import com.wutaodsg.mvvm.command.UICommand;
 import com.wutaodsg.mvvm.core.BaseViewModel;
 import com.wutaodsg.mvvm.core.BindVariable;
@@ -19,9 +18,6 @@ import com.wutaodsg.mvvm.core.BindVariable;
 
 public class MainActivityViewModel extends BaseViewModel {
 
-    private static final String TAG = MainActivity.TAG_PREFIX + "MainActivityVM";
-    
-    
     private static final String ERROR_MESSAGE_NO_NETWORK = "请连接网络";
     private static final String ERROR_MESSAGE_INVALID_INPUT = "用户名或密码不正确";
     private static final String ERROR_MESSAGE_USER_LOGIN_FAILED = "用户登录失败";

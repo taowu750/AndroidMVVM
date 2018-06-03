@@ -1,16 +1,17 @@
 package com.wutaodsg.mvvm.core;
 
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.ViewModelProviders;
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import java.util.List;
 
 /**
  * 作为 MVVM 模式 V 层中的基类 Fragment。
@@ -36,9 +37,9 @@ import java.util.List;
  */
 
 public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends ViewDataBinding>
-        extends Fragment implements CoreView<VM, DB>, ParentView {
+        extends Fragment implements CoreView<VM, DB>, ContainerView {
 
-    private ViewProxy<VM, DB> mViewProxy;
+    ViewProxy<VM, DB> mViewProxy;
 
 
     @Nullable
@@ -53,38 +54,39 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mViewProxy = new ViewProxy<>(this, savedInstanceState);
+        mViewProxy = new ViewProxy<>(this);
+        mViewProxy.onCreate(savedInstanceState);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        mViewProxy.childViewsOnStart();
+        mViewProxy.onStart();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        mViewProxy.childViewsOnResume();
+        mViewProxy.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mViewProxy.childViewsOnPause();
+        mViewProxy.onPause();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        mViewProxy.childViewsOnStop();
+        mViewProxy.onStop();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         beforeDetach();
-        mViewProxy.destroy();
+        mViewProxy.onDestroy();
         mViewProxy = null;
     }
 
@@ -125,9 +127,22 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
         return mViewProxy.getDataBinding();
     }
 
+    @Override
+    public Lifecycle.State getCurrentState() {
+        assertViewProxy();
+        return mViewProxy.getCurrentState();
+    }
+
+    @Override
+    public Lifecycle.Event getCurrentEvent() {
+        assertViewProxy();
+        return mViewProxy.getCurrentEvent();
+    }
+
+
     @Nullable
     @Override
-    public VM newViewModel() {
+    public VM onCreateViewModel() {
         return null;
     }
 
@@ -143,22 +158,92 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public final <VM extends BaseViewModel, DB extends ViewDataBinding, CV extends ChildView<VM, DB>>
+    public final <T extends View> T findViewById(@IdRes int id) {
+        return getView() != null ? (T) getView().findViewById(id) : null;
+    }
+
+    @Override
+    public final <SVM extends BaseViewModel> SVM newViewModel(Class<SVM> viewModelClass) {
+        return ViewModelProviders.of(this).get(viewModelClass);
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    boolean containsChildView(Class<CV> childViewClass, @IdRes int containerId) {
+        assertViewProxy();
+        return mViewProxy.containsChildView(childViewClass, containerId);
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
     boolean containsChildView(Class<CV> childViewClass) {
         assertViewProxy();
         return mViewProxy.containsChildView(childViewClass);
     }
 
     @Override
-    public final <VM extends BaseViewModel, DB extends ViewDataBinding, CV extends ChildView<VM, DB>>
-    CV getChildView(Class<CV> childViewClass) {
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV bindChildView(Class<CV> childViewClass,
+                          @IdRes int containerId,
+                          boolean attachToParent,
+                          boolean removeViews) {
         assertViewProxy();
-        return mViewProxy.getChildView(childViewClass);
+        return mViewProxy.bindChildView(childViewClass, containerId, attachToParent, removeViews);
     }
 
     @Override
-    public final List<ChildView> getChildViews() {
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV bindChildView(Class<CV> childViewClass, @IdRes int containerId,
+                          boolean attachToParent) {
+        assertViewProxy();
+        return mViewProxy.bindChildView(childViewClass, containerId, attachToParent);
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV bindChildView(Class<CV> childViewClass, @IdRes int containerId) {
+        assertViewProxy();
+        return mViewProxy.bindChildView(childViewClass, containerId);
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    boolean unbindChildView(Class<CV> childViewClass, @IdRes int containerId) {
+        assertViewProxy();
+        return mViewProxy.unbindChildView(childViewClass, containerId);
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    boolean unbindChildView(Class<CV> childViewClass) {
+        assertViewProxy();
+        return mViewProxy.unbindChildView(childViewClass);
+    }
+
+    @Override
+    public boolean unbindAllChildViews() {
+        assertViewProxy();
+        return mViewProxy.unbindAllChildViews();
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV getChildView(Class<CV> childViewClass, @IdRes int containerId) {
+        assertViewProxy();
+        return mViewProxy.getChildView(childViewClass, containerId);
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV[] getChildViews(Class<CV> childViewClass) {
+        assertViewProxy();
+        return mViewProxy.getChildViews(childViewClass);
+    }
+
+    @Override
+    public final ChildView[] getChildViews() {
         assertViewProxy();
         return mViewProxy.getChildViews();
     }

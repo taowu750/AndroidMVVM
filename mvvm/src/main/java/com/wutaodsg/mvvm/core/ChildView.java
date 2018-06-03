@@ -5,9 +5,12 @@ import android.content.Context;
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.annotation.IdRes;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import java.lang.annotation.ElementType;
@@ -17,7 +20,8 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- * 此类代表一个子 View。子 View 被一般被父 View（即 {@link BaseMVVMActivity} 或 {@link BaseMVVMFragment}）
+ * 此类代表一个子 View。子 View 被一般被父 View（即 {@link BaseMVVMActivity}、
+ * {@link BaseMVVMFragment} 或其他 ChildView）
  * 包含。也就是说，子 View 一般存在于父 View 中，比如父 Layout XML 文件中的
  * &lt;include&gt; 所引用的子 View；或者 Layout XML 上控件所引用的视图，比如
  * NavigationView 的 app:headerLayout 属性所表示的视图。<br/>
@@ -25,22 +29,36 @@ import java.lang.annotation.Target;
  * 子 View 的位置。
  * </p>
  * <p>
- * ChildView 实现了 {@link CoreView}。此外，它也具有生命周期函数：{@link #onCreate(Bundle)}、
- * {@link #onStart()}、{@link #onResume()}、{@link #onPause()}、{@link #onStop()}、
- * {@link #onDestroy()}，这些生命周期函数会在父 View 的对于方法中被调用。
+ * 同一种类型 ChildView 可以被绑定在父视图上的不同容器中，也就是说可以进行<em>多次绑定</em>，
+ * 需要注意的是，同一个容器不可以多次绑定一种 ChildView。
  * </p>
  * <p>
- * ChildView 保存了它的父 View 的引用，它的容器的引用，以及一个 Context。
+ * ChildView 实现了 {@link CoreView}。所以它具有生命周期方法：{@link #onCreate(Bundle)}、
+ * {@link #onStart()}、{@link #onResume()}、{@link #onPause()}、{@link #onStop()}、
+ * {@link #onDestroy()}，这些生命周期函数会在父 View 的对应方法中被调用。
+ * </p>
+ * <p>
+ * ChildView 还实现了 {@link ContainerView}，使得它也可以包含其他 ChildView。
+ * 所以可以通过这点实现<em>递归绑定</em>。
+ * </p>
+ * <p>
+ * ChildView 保存了它的父 View 的引用，它的容器的引用，以及一个 Context 的引用。
  * 如果 ChildView 的父 View 是 {@link BaseMVVMActivity}，可以使用
- * {@link #getParentActivity()} 获取这个引用；如果 ChildView 的父 View
- * 是 {@link BaseMVVMFragment}，可以使用 {@link #getParentFragment()}
- * 获取这个引用。<br/>
+ * {@link #getParentActivity()} 获取这个引用；
+ * 如果 ChildView 的父 View 是 {@link BaseMVVMFragment}，可以使用
+ * {@link #getParentFragment()} 获取这个引用。<br/>
+ * 如果 ChildView 的父 View 是其他 ChildView，可以使用
+ * {@link #getParentChildView()} 获取这个引用<br/>
  * 还可以使用 {@link #getParentActivity(Class)} 或 {@link #getParentFragment(Class)}
- * 获取更加精确的类型。
+ * 获取更加精确的类型。<br/>
+ * 当 ChildView 的父 View 是 ChildView 时，ChildView 也会保存最原始祖先（也就是不断
+ * 向上回溯最终得到的父 View）的引用，这个最原始祖先要么是 {@link BaseMVVMActivity}
+ * 要么是 {@link BaseMVVMFragment}。
  * </p>
  * <p>
  * 在父 View 上使用 {@link BindChildView} 或 {@link BindChildViews} 注解
- * 来声明 ChildView。
+ * 来声明 ChildView。<br/>
+ * 也可以使用 {@link ContainerView} 的方法进行<em>动态绑定</em>。
  * </p>
  * <p>
  * 需要注意的是，ChildView 必须有一个无参构造器，否则框架将无法正确的构造它。
@@ -48,7 +66,7 @@ import java.lang.annotation.Target;
  */
 
 public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBinding>
-        implements CoreView<VM, DB> {
+        implements CoreView<VM, DB>, ContainerView {
 
     /**
      * 父 View 为 {@link BaseMVVMActivity} 的子类
@@ -58,6 +76,10 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
      * 父 View 为 {@link BaseMVVMFragment} 的子类
      */
     public static final int PARENT_TYPE_FRAGMENT = 1;
+    /**
+     * 父 View 为 ChildView 的子类
+     */
+    public static final int PARENT_TYPE_CHILD_VIEW = 2;
 
 
     private VM mViewModel;
@@ -65,36 +87,16 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
 
     private BaseMVVMActivity mParentActivity;
     private BaseMVVMFragment mParentFragment;
+    private ChildView mParentChildView;
     private Context mContext;
     private ViewGroup mContainer;
+
+    private ViewProxy mViewProxy;
+    private ViewProxy.ContainerViewImpl mContainerView;
 
     @ParentType
     private int mParentType;
 
-
-    @NonNull
-    @Override
-    public DB getDataBinding() {
-        return mDataBinding;
-    }
-
-    @NonNull
-    @Override
-    public VM getViewModel() {
-        return mViewModel;
-    }
-
-    @Nullable
-    @Override
-    public VM newViewModel() {
-        return null;
-    }
-
-    @Override
-    @CallSuper
-    public void beforeBindView() {
-
-    }
 
     /**
      * ChildView 不支持这个方法，如果有需要，请使用它的父 View 的 getLifecycle() 方法。
@@ -105,34 +107,99 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
         throw new UnsupportedOperationException("ChildView does not support this method!");
     }
 
+
     @CallSuper
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         if (mViewModel == null ||
                 mDataBinding == null ||
                 mContext == null ||
                 mContainer == null ||
                 (mParentActivity == null && mParentFragment == null)) {
-            throw new IllegalStateException("\"" + getClass().getName() + "\" is wrongly constructed!");
+            throw new IllegalStateException(getClass().getName() + ": is wrongly constructed!");
         }
+
+        CoreView coreView;
+        if (mParentActivity != null) {
+            mViewProxy = mParentActivity.mViewProxy;
+            coreView = mParentActivity;
+        } else {
+            mViewProxy = mParentFragment.mViewProxy;
+            coreView = mParentFragment;
+        }
+
+        mContainerView = mViewProxy.new ContainerViewImpl(coreView, this);
+        mViewProxy.bindChildViewsByAnnotation(coreView, this, mContainerView);
     }
 
     @CallSuper
-    protected void onStart() {
-
+    public void onStart() {
+        mContainerView.childViewsOnStart();
     }
 
     @CallSuper
-    protected void onResume() {
-
+    public void onResume() {
+        mContainerView.childViewsOnResume();
     }
 
     @CallSuper
-    protected void onPause() {
-
+    public void onPause() {
+        mContainerView.childViewsOnPause();
     }
 
     @CallSuper
-    protected void onStop() {
+    public void onStop() {
+        mContainerView.childViewsOnStop();
+    }
+
+    @CallSuper
+    public void onDestroy() {
+        beforeDetach();
+
+        mContainerView.unbindAllChildViews();
+        mContainerView = null;
+
+        mViewModel.onDetach();
+        mViewModel = null;
+        mDataBinding = null;
+        mParentActivity = null;
+        mParentFragment = null;
+        mViewProxy = null;
+        mContext = null;
+        mContainer = null;
+    }
+
+    @NonNull
+    @Override
+    public final DB getDataBinding() {
+        return mDataBinding;
+    }
+
+    @NonNull
+    @Override
+    public final VM getViewModel() {
+        return mViewModel;
+    }
+
+    @Override
+    public final Lifecycle.State getCurrentState() {
+        return mViewProxy.getCurrentState();
+    }
+
+    @Override
+    public final Lifecycle.Event getCurrentEvent() {
+        return mViewProxy.getCurrentEvent();
+    }
+
+
+    @Nullable
+    @Override
+    public VM onCreateViewModel() {
+        return null;
+    }
+
+    @Override
+    @CallSuper
+    public void beforeBindView() {
 
     }
 
@@ -142,16 +209,96 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
 
     }
 
-    @CallSuper
-    protected void onDestroy() {
-        beforeDetach();
-        mViewModel.onDetach();
-        mViewModel = null;
-        mDataBinding = null;
-        mParentActivity = null;
-        mParentFragment = null;
-        mContext = null;
-        mContainer = null;
+    @Override
+    public final <T extends View> T findViewById(int id) {
+        return mDataBinding.getRoot().findViewById(id);
+    }
+
+    @Override
+    public final LayoutInflater getLayoutInflater() {
+        return mParentActivity != null ? mParentActivity.getLayoutInflater() :
+                mParentFragment.getLayoutInflater();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public final <SVM extends BaseViewModel> SVM newViewModel(Class<SVM> viewModelClass) {
+        return (SVM) (mParentActivity != null ? mParentActivity.newViewModel(viewModelClass) :
+                mParentFragment.newViewModel(viewModelClass));
+    }
+
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    boolean containsChildView(Class<CV> childViewClass, @IdRes int containerId) {
+        return mContainerView.containsChildView(childViewClass, containerId);
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    boolean containsChildView(Class<CV> childViewClass) {
+        return mContainerView.containsChildView(childViewClass);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV bindChildView(Class<CV> childViewClass,
+                     @IdRes int containerId,
+                     boolean attachToParent,
+                     boolean removeViews) {
+        return (CV) mContainerView.bindChildView(childViewClass, containerId, attachToParent, removeViews);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV bindChildView(Class<CV> childViewClass, @IdRes int containerId,
+                     boolean attachToParent) {
+        return (CV) mContainerView.bindChildView(childViewClass, containerId, attachToParent);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV bindChildView(Class<CV> childViewClass, @IdRes int containerId) {
+        return (CV) mContainerView.bindChildView(childViewClass, containerId);
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    boolean unbindChildView(Class<CV> childViewClass, @IdRes int containerId) {
+        return mContainerView.unbindChildView(childViewClass, containerId);
+    }
+
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    boolean unbindChildView(Class<CV> childViewClass) {
+        return mContainerView.unbindChildView(childViewClass);
+    }
+
+    @Override
+    public boolean unbindAllChildViews() {
+        return mContainerView.unbindAllChildViews();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV getChildView(Class<CV> childViewClass, @IdRes int containerId) {
+        return (CV) mContainerView.getChildView(childViewClass, containerId);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
+    CV[] getChildViews(Class<CV> childViewClass) {
+        return (CV[]) mContainerView.getChildViews(childViewClass);
+    }
+
+    @Override
+    public final ChildView[] getChildViews() {
+        return mContainerView.getChildViews();
     }
 
 
@@ -174,9 +321,19 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
     }
 
     /**
-     * 返回 ChildView 父 View 的类型，有两种值：{@link #PARENT_TYPE_ACTIVITY} 表示
+     * 判断 ChildView 的父 View 是否为 ChildView 的子类。
+     *
+     * @return ChildView 的父 View 是 ChildView 的子类返回 true，否则返回 false
+     */
+    public final boolean parentIsChildView() {
+        return mParentChildView != null;
+    }
+
+    /**
+     * 返回 ChildView 父 View 的类型，有三种值：{@link #PARENT_TYPE_ACTIVITY} 表示
      * 父 View 为 {@link BaseMVVMActivity} 的子类；{@link #PARENT_TYPE_FRAGMENT} 表示父
-     * View 为 {@link BaseMVVMFragment} 的子类。
+     * View 为 {@link BaseMVVMFragment} 的子类；{@link #PARENT_TYPE_CHILD_VIEW} 表示
+     * 父 View 为 ChildView 的子类。
      *
      * @return 返回 ChildView 父 View 的类型
      */
@@ -205,6 +362,17 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
     @Nullable
     public final BaseMVVMFragment getParentFragment() {
         return mParentFragment;
+    }
+
+    /**
+     * 如果此 ChildView 的父 View 是 {@link #PARENT_TYPE_CHILD_VIEW} 类型，返回
+     * 它的父 View，否则返回 null。
+     *
+     * @return 类型为 ChildView 的父 View
+     */
+    @Nullable
+    public final ChildView getParentChildView() {
+        return mParentChildView;
     }
 
     /**
@@ -254,6 +422,29 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
     }
 
     /**
+     * 如果此 ChildView 父 ChildView 的类型与参数 parentChildViewClass 表示的类型
+     * 相同，返回这个 ChildView 的父 ChildView；如果不相同或者此 ChildView 的父
+     * ChildView 为 null，返回 null。
+     *
+     * @param parentChildViewClass 表示此 ChildView 父 ChildView 的类型
+     * @param <PVM>                父 ChildView 的 ViewModel 类型
+     * @param <PDB>                父 ChildView 的 DataBinding 类型
+     * @param <PC>                 父 ChildView 的类型
+     * @return 父 ChildView 引用或 null
+     */
+    @SuppressWarnings("unchecked")
+    public final <PVM extends BaseViewModel, PDB extends ViewDataBinding, PC extends ChildView<PVM, PDB>>
+    PC getParentChildView(@NonNull Class<PC> parentChildViewClass) {
+        if (mParentChildView != null) {
+            if (mParentChildView.getClass().equals(parentChildViewClass)) {
+                return (PC) mParentChildView;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * 返回与此 ChildView 绑定的 Context 对象。
      *
      * @return {@link Context} 对象
@@ -274,8 +465,8 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
     }
 
 
-    @IntDef({PARENT_TYPE_ACTIVITY, PARENT_TYPE_FRAGMENT})
-    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({PARENT_TYPE_ACTIVITY, PARENT_TYPE_FRAGMENT, PARENT_TYPE_CHILD_VIEW})
+    @Retention(RetentionPolicy.CLASS)
     @Target({ElementType.FIELD, ElementType.METHOD})
     public @interface ParentType {
     }
@@ -292,21 +483,21 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
     }
 
     void setParentActivity(@NonNull BaseMVVMActivity parentActivity) {
-        if (mParentFragment != null) {
-            throw new IllegalStateException("Parent Fragment already exists, you can't set parentActivity");
-        }
         assertReset(mParentActivity, "Parent Activity");
         mParentActivity = parentActivity;
         mParentType = PARENT_TYPE_ACTIVITY;
     }
 
     void setParentFragment(@NonNull BaseMVVMFragment parentFragment) {
-        if (mParentActivity != null) {
-            throw new IllegalStateException("Parent Activity already exists, you can't set parentFragment");
-        }
         assertReset(mParentFragment, "Parent Fragment");
         mParentFragment = parentFragment;
         mParentType = PARENT_TYPE_FRAGMENT;
+    }
+
+    void setParentChildView(@NonNull ChildView parentChildView) {
+        assertReset(mParentChildView, "Parent ChildView");
+        mParentChildView = parentChildView;
+        mParentType = PARENT_TYPE_CHILD_VIEW;
     }
 
     void setContext(@NonNull Context context) {

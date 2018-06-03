@@ -2,7 +2,6 @@ package com.wutaodsg.androidmvvm.view;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.MenuItem;
 
 import com.android.databinding.library.baseAdapters.BR;
@@ -12,16 +11,16 @@ import com.wutaodsg.androidmvvm.viewmodel.ChildViewActivityVM;
 import com.wutaodsg.mvvm.command.Function1;
 import com.wutaodsg.mvvm.command.ResponseCommand;
 import com.wutaodsg.mvvm.core.BaseMVVMActivity;
-import com.wutaodsg.mvvm.core.BindChildView;
 import com.wutaodsg.mvvm.core.BindVariable;
 import com.wutaodsg.mvvm.core.ViewModelType;
+import com.wutaodsg.mvvm.util.log.LogUtils;
 
 
 @ViewModelType(ChildViewActivityVM.class)
-@BindChildView(type = NavHeaderView.class, container = R.id.nav_view)
+//@BindChildView(type = NavHeaderView.class, container = R.id.nav_view)
 public class ChildViewActivity extends BaseMVVMActivity<ChildViewActivityVM, ActivityChildViewBinding> {
 
-    private static final String TAG = MainActivity.TAG_PREFIX + "ChildViewActivity";
+    private static final String TAG = "ChildViewActivity";
     
     
     @BindVariable(BR.onItemSelectedCommand)
@@ -41,9 +40,19 @@ public class ChildViewActivity extends BaseMVVMActivity<ChildViewActivityVM, Act
     }
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.d(TAG, "onCreate: Child View: " + getChildView(NavHeaderView.class));
+        LogUtils.d(TAG, "onCreate: created");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        bindChildView(NavHeaderView.class, R.id.nav_view);
+        LogUtils.d(TAG, "onStart: containsChildView child view: " +
+                containsChildView(NavHeaderView.class, R.id.nav_view));
+        LogUtils.d(TAG, "onStart: Child View: " + getChildViews()[0]);
     }
 }

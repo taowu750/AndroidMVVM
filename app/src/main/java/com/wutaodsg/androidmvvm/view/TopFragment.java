@@ -1,7 +1,6 @@
 package com.wutaodsg.androidmvvm.view;
 
 import android.content.Intent;
-import android.util.Log;
 
 import com.android.databinding.library.baseAdapters.BR;
 import com.wutaodsg.androidmvvm.R;
@@ -16,6 +15,7 @@ import com.wutaodsg.mvvm.command.ReplyCommand;
 import com.wutaodsg.mvvm.core.BaseMVVMFragment;
 import com.wutaodsg.mvvm.core.BindVariable;
 import com.wutaodsg.mvvm.core.ViewModelType;
+import com.wutaodsg.mvvm.util.log.LogUtils;
 import com.wutaodsg.mvvm.util.vmeventbus.ViewModelEventBus;
 
 
@@ -26,7 +26,7 @@ import com.wutaodsg.mvvm.util.vmeventbus.ViewModelEventBus;
 @ViewModelType(TopFragmentViewModel.class)
 public class TopFragment extends BaseMVVMFragment<TopFragmentViewModel, FragmentTopBinding> {
 
-    private static final String TAG = MainActivity.TAG_PREFIX + "TopFragment";
+    private static final String TAG = "TopFragment";
     
     
     @BindVariable(BR.onTextChangeCommand)
@@ -36,7 +36,7 @@ public class TopFragment extends BaseMVVMFragment<TopFragmentViewModel, Fragment
         public void execute(TextChangeDataWrapper textChangeDataWrapper) {
             boolean result = ViewModelEventBus.getInstance().post(ViewModelEventTags.TEXT,
                     textChangeDataWrapper.s.toString(), BottomFragmentViewModel.class);
-            Log.d(TAG, "onTextChangeCommand: result: " + result);
+            LogUtils.d(TAG, "onTextChangeCommand: result: " + result);
         }
     });
 

@@ -2,12 +2,14 @@ package com.wutaodsg.mvvm.core;
 
 import android.arch.lifecycle.LifecycleOwner;
 import android.databinding.ViewDataBinding;
+import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
+import android.view.View;
 
 /**
- * 扩展了基础 View 接口的功能，从而和 ViewModel、DataBinding Layout XML 具有了
- * 更多的联系。
+ * 扩展了 BaseView 接口的功能，从而和 ViewModel、DataBinding 具有了更多的联系。
  * <p>
  * 此外它还扩展了 LifecycleOwner 接口，从而可以与 Android 生命周期组件关联。
  */
@@ -20,7 +22,7 @@ public interface CoreView<VM extends BaseViewModel, DB extends ViewDataBinding>
      * <p>
      * 你可以在这个方法中通过 {@link android.arch.lifecycle.ViewModelProviders} 的
      * {@code of(FragmentActivity/Activity).get(Class)} 方法重新创建你想要的 ViewModel
-     * 对象（需要注意的是，此对象必须是 VM 泛型指定的类型）。
+     * 对象（需要注意的是，此对象必须是 SVM 泛型指定的类型）。
      * <p>
      * 这个方法创建的 ViewModel 在不为 null 的情况下，将会被优先绑定到 View 对象中.
      * 也就是说使用 {@link ViewModelType} 注解指定的 ViewModel 会被此方法创建的
@@ -29,7 +31,7 @@ public interface CoreView<VM extends BaseViewModel, DB extends ViewDataBinding>
      * 此方法返回值可以为 null。
      */
     @Nullable
-    VM newViewModel();
+    VM onCreateViewModel();
 
     /**
      * 这个方法将在 View 绑定 UI 视图（也就是 Layout XML 文件）之前调用。
@@ -50,4 +52,30 @@ public interface CoreView<VM extends BaseViewModel, DB extends ViewDataBinding>
      */
     @LayoutRes
     int getLayoutResId();
+
+    /**
+     * 在 View 中查找具有指定 id 的控件。
+     *
+     * @param id  控件 id
+     * @param <T> 控件类型
+     * @return 控件对象
+     */
+    <T extends View> T findViewById(@IdRes int id);
+
+    /**
+     * 获取 LayoutInflater 对象
+     *
+     * @return LayoutInflater
+     */
+    LayoutInflater getLayoutInflater();
+
+    /**
+     * 创建一个 SVM 类型的 ViewModel 对象。这个方法要求 ViewModel 必须具有默认构造器，
+     * 否则会抛出异常。<br/>
+     * 这个 ViewModel 将会绑定到 CoreView 上。
+     *
+     * @param viewModelClass ViewModel 的类型
+     * @return SVM 的对象
+     */
+    <SVM extends BaseViewModel> SVM newViewModel(Class<SVM> viewModelClass);
 }
