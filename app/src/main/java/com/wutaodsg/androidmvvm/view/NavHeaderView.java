@@ -6,13 +6,13 @@ import com.wutaodsg.androidmvvm.R;
 import com.wutaodsg.androidmvvm.databinding.NavHeaderBinding;
 import com.wutaodsg.androidmvvm.viewmodel.NavHeaderViewVM;
 import com.wutaodsg.mvvm.core.ChildView;
-import com.wutaodsg.mvvm.core.ViewModelType;
+import com.wutaodsg.mvvm.core.annotation.MainViewModel;
 import com.wutaodsg.mvvm.util.log.LogUtils;
 
 /**
  * Created by wutao on 2018/5/4.
  */
-@ViewModelType(NavHeaderViewVM.class)
+@MainViewModel(NavHeaderViewVM.class)
 public class NavHeaderView extends ChildView<NavHeaderViewVM, NavHeaderBinding> {
 
     private static final String TAG = "NavHeaderView";

@@ -8,7 +8,7 @@ import com.android.databinding.library.baseAdapters.BR;
 import com.wutaodsg.androidmvvm.constant.ViewModelEventTags;
 import com.wutaodsg.mvvm.command.Action1;
 import com.wutaodsg.mvvm.core.BaseViewModel;
-import com.wutaodsg.mvvm.core.BindVariable;
+import com.wutaodsg.mvvm.core.annotation.BindVariable;
 import com.wutaodsg.mvvm.util.log.LogUtils;
 import com.wutaodsg.mvvm.util.vmeventbus.ViewModelCommand;
 import com.wutaodsg.mvvm.util.vmeventbus.ViewModelEventBus;

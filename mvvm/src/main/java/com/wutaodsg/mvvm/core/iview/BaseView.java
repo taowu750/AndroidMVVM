@@ -1,9 +1,11 @@
-package com.wutaodsg.mvvm.core;
+package com.wutaodsg.mvvm.core.iview;
 
 import android.arch.lifecycle.Lifecycle;
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+
+import com.wutaodsg.mvvm.core.BaseViewModel;
 
 /**
  * <p>

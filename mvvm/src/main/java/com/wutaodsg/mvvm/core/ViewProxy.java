@@ -11,6 +11,17 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.ViewGroup;
 
+import com.wutaodsg.mvvm.core.annotation.BindChildView;
+import com.wutaodsg.mvvm.core.annotation.BindChildViews;
+import com.wutaodsg.mvvm.core.annotation.BindVariable;
+import com.wutaodsg.mvvm.core.annotation.ExtraViewModel;
+import com.wutaodsg.mvvm.core.annotation.ExtraViewModels;
+import com.wutaodsg.mvvm.core.annotation.MainViewModel;
+import com.wutaodsg.mvvm.core.iview.BaseView;
+import com.wutaodsg.mvvm.core.iview.ContainerView;
+import com.wutaodsg.mvvm.core.iview.CoreView;
+import com.wutaodsg.mvvm.core.iview.ExtraViewModelView;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -18,8 +29,8 @@ import java.util.Map;
 
 /**
  * <p>
- * View 对象的代理类，实现了 {@link BaseView} 和 {@link ContainerView} 接口。
- * 它是框架底层代码的核心类之一。
+ * View 对象的代理类，实现了 {@link BaseView} 、{@link ContainerView}
+ * 以及 {@link ExtraViewModelView} 接口。它是框架底层代码的核心类之一。
  * </p>
  * <p>
  * 它在内部提供了对 View 所需要的 ViewModel 和 DataBinding 的创建和绑定操作。
@@ -37,14 +48,12 @@ import java.util.Map;
  */
 
 public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
-        implements BaseView<VM, DB>, ContainerView {
+        implements BaseView<VM, DB>, ContainerView, ExtraViewModelView {
 
     private static final String TAG = "WuT.ViewProxy";
 
 
     private CoreView<VM, DB> mCoreView;
-    private BaseMVVMActivity<VM, DB> mActivity;
-    private BaseMVVMFragment<VM, DB> mFragment;
 
     private VM mViewModel;
     private DB mDataBinding;
@@ -55,13 +64,16 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
     private Bundle mSavedInstanceState;
 
     private ContainerViewImpl mContainerView;
+    private ExtraViewModelViewImpl mExtraViewModelView;
 
 
     /**
      * 将 CoreView 和它的 ViewModel、DataBinding 对象绑定在一起 ，并初始化
      * 它们的状态。如果有的话，也会绑定它的 {@link ChildView}。<br/>
      * 这个 CoreView 必须是 {@link BaseMVVMActivity} 或者
-     * {@link BaseMVVMFragment}。
+     * {@link BaseMVVMFragment}。<br/>
+     * 如果 coreView 同时实现了 {@link ExtraViewModelView} 接口，
+     * ViewProxy 还会绑定它的额外的 ViewModel。
      *
      * @param coreView CoreView 对象
      */
@@ -70,22 +82,29 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
         mCurrentState = Lifecycle.State.INITIALIZED;
 
         mCoreView = coreView;
-        mActivity = coreView instanceof BaseMVVMActivity ? (BaseMVVMActivity<VM, DB>) coreView : null;
-        mFragment = coreView instanceof BaseMVVMFragment ? (BaseMVVMFragment<VM, DB>) coreView : null;
+        BaseMVVMActivity<VM, DB> activity = coreView instanceof BaseMVVMActivity ? (BaseMVVMActivity<VM, DB>)
+                coreView : null;
+        BaseMVVMFragment<VM, DB> fragment = coreView instanceof BaseMVVMFragment ? (BaseMVVMFragment<VM, DB>)
+                coreView : null;
         assertCoreView(coreView);
 
         mContainerView = new ContainerViewImpl(mCoreView);
 
-        if (mActivity != null) {
-            mDataBinding = DataBindingUtil.setContentView(mActivity, mCoreView.getLayoutResId());
+        if (activity != null) {
+            mDataBinding = DataBindingUtil.setContentView(activity, mCoreView.getLayoutResId());
         } else {
-            mDataBinding = DataBindingUtil.bind(mFragment.getView());
+            mDataBinding = DataBindingUtil.bind(fragment.getView());
         }
-        mViewModel = (VM) createViewModel(mCoreView);
+        mViewModel = (VM) createMainViewModel(mCoreView);
 
-        mViewModel.onAttach(mActivity != null ? mActivity : mFragment.getActivity());
+        mViewModel.onAttach(mCoreView.getContext());
         bindAllDataBindingVariables(mCoreView, mViewModel, mDataBinding);
         bindUIAwareComponent(mCoreView);
+
+        if (mCoreView instanceof ExtraViewModelView) {
+            mExtraViewModelView = new ExtraViewModelViewImpl((ExtraViewModelView) mCoreView);
+            bindExtraViewModelsByAnnotation((ExtraViewModelView) mCoreView);
+        }
     }
 
 
@@ -135,6 +154,7 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
         mCurrentEvent = Lifecycle.Event.ON_DESTROY;
 
         mContainerView.unbindAllChildViews();
+        mContainerView.clear();
         mContainerView = null;
 
         unbindUIAwareComponent(mCoreView);
@@ -143,9 +163,13 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
         mViewModel = null;
         mDataBinding = null;
         mCoreView = null;
-        mActivity = null;
-        mFragment = null;
         mSavedInstanceState = null;
+
+        if (mExtraViewModelView != null) {
+            mExtraViewModelView.unbindAllExtraViewModels();
+            mExtraViewModelView.clear();
+            mExtraViewModelView = null;
+        }
     }
 
     @Override
@@ -238,21 +262,63 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
     }
 
 
+    @Override
+    public <EVM extends BaseViewModel>
+    boolean containsExtraViewModel(Class<EVM> viewModelClass) {
+        return mExtraViewModelView != null && mExtraViewModelView.containsExtraViewModel(viewModelClass);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <EVM extends BaseViewModel> EVM bindExtraViewModel(Class<EVM> viewModelClass) {
+        return mExtraViewModelView != null ? (EVM) mExtraViewModelView.bindExtraViewModel(viewModelClass) :
+                null;
+    }
+
+    @Override
+    public <EVM extends BaseViewModel> boolean unbindExtraViewModel(Class<EVM> viewModelClass) {
+        return mExtraViewModelView != null && mExtraViewModelView.unbindExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public boolean unbindAllExtraViewModels() {
+        return mExtraViewModelView != null && mExtraViewModelView.unbindAllExtraViewModels();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <EVM extends BaseViewModel> EVM getExtraViewModel(Class<EVM> viewModelClass) {
+        return mExtraViewModelView != null ? (EVM) mExtraViewModelView.getExtraViewModel(viewModelClass) :
+                null;
+    }
+
+    @Override
+    public BaseViewModel[] getAllExtraViewModels() {
+        return mExtraViewModelView != null ? mExtraViewModelView.getAllExtraViewModels() : null;
+    }
+
+
     class ContainerViewImpl implements ContainerView {
 
-        private CoreView mCoreView;
-        private ChildView mChildView;
+        private CoreView mAncestorView;
+        private ChildView mParentChildView;
         private Map<Class<? extends ChildView>, Map<Integer, ChildView>> mChildViewMap;
 
 
-        public ContainerViewImpl(@NonNull CoreView coreView, @Nullable ChildView childView) {
-            mCoreView = coreView;
-            mChildView = childView;
-            mChildViewMap = new HashMap<>();
+        /**
+         * 父 View 是 ChildView 使用这个方法。
+         */
+        public ContainerViewImpl(@NonNull CoreView ancestorView, @Nullable ChildView parentChildView) {
+            mAncestorView = ancestorView;
+            mParentChildView = parentChildView;
+            mChildViewMap = new HashMap<>(2);
         }
 
-        public ContainerViewImpl(@NonNull CoreView coreView) {
-            this(coreView, null);
+        /**
+         * 父 View 是 BaseMVVMActivity 或 BaseMVVMFragment 用这个方法。
+         */
+        public ContainerViewImpl(@NonNull CoreView ancestorView) {
+            this(ancestorView, null);
         }
 
 
@@ -278,27 +344,40 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
                          boolean attachToParent,
                          boolean removeViews) {
             // 判断当前生命周期事件是否可以执行 bindChildView 方法
-            String name = mChildView != null ? mChildView.getClass().getName() : mCoreView.getClass().getName();
-            if (mCurrentEvent != null &&
+            String name = mParentChildView != null ? mParentChildView.getClass().getName() : mAncestorView.getClass()
+                    .getName();
+            if (mCurrentEvent == null ||
                     mCurrentEvent.compareTo(Lifecycle.Event.ON_PAUSE) >= 0) {
                 throw new IllegalStateException(name + ": " +
                         "The bindChildView method can not be invoked in onPause and subsequent lifecycle events.");
             }
 
+            if (childViewClass == null) {
+                return null;
+            }
+
             if (!containsChildView(childViewClass, containerId)) {
+                // 如果父 View 是 ChildView 并且与将要绑定的 ChildView 类型相同，
+                // 则停止绑定并返回 null
+                if (mParentChildView != null && mParentChildView.getClass().equals(childViewClass)) {
+                    return null;
+                }
+
                 // 将 CoreView 转型成 Activity 或者 Fragment
-                assertCoreView(mCoreView);
-                BaseMVVMActivity activity = mCoreView instanceof BaseMVVMActivity ? (BaseMVVMActivity) mCoreView :
+                assertCoreView(mAncestorView);
+                BaseMVVMActivity activity = mAncestorView instanceof BaseMVVMActivity ? (BaseMVVMActivity)
+                        mAncestorView :
                         null;
-                BaseMVVMFragment fragment = mCoreView instanceof BaseMVVMFragment ? (BaseMVVMFragment) mCoreView :
+                BaseMVVMFragment fragment = mAncestorView instanceof BaseMVVMFragment ? (BaseMVVMFragment)
+                        mAncestorView :
                         null;
 
                 // 查找 ChildView 的容器 container 对象
                 ViewGroup container;
-                if (mChildView != null) {
-                    container = (ViewGroup) mChildView.findViewById(containerId);
+                if (mParentChildView != null) {
+                    container = (ViewGroup) mParentChildView.findViewById(containerId);
                 } else {
-                    container = (ViewGroup) mCoreView.findViewById(containerId);
+                    container = (ViewGroup) mAncestorView.findViewById(containerId);
                 }
                 if (container == null) {
                     throw new IllegalStateException("The specified Container does not exist, id: " + containerId);
@@ -319,7 +398,7 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
                 childView.beforeBindView();
 
                 // 创建 ChildView 的 DataBinding 对象
-                CDB childViewDataBinding = DataBindingUtil.inflate(mCoreView.getLayoutInflater(),
+                CDB childViewDataBinding = DataBindingUtil.inflate(mAncestorView.getLayoutInflater(),
                         childView.getLayoutResId(), container, attachToParent);
                 if (childViewDataBinding == null) {
                     throw new IllegalStateException(childViewClass.getName() + ": The DataBinding of ChildView " +
@@ -327,29 +406,24 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
                 }
 
                 // 创建 ChildView 的 ViewModel 对象
-                CVM childViewModel = (CVM) createViewModel(childView);
+                CVM childViewModel = (CVM) createMainViewModel(childView);
 
                 // 为 ChildView 设置它的 VM、DB、Parent、Context 和 Container
                 childView.setDataBinding(childViewDataBinding);
                 childView.setViewModel(childViewModel);
-                if (mChildView != null) {
-                    childView.setParentChildView(mChildView);
+                if (mParentChildView != null) {
+                    childView.setParentChildView(mParentChildView);
                 }
                 if (activity != null) {
                     childView.setParentActivity(activity);
-                    childView.setContext(activity);
                 } else {
                     childView.setParentFragment(fragment);
-                    childView.setContext(fragment.getContext());
                 }
+                childView.setContext(mAncestorView.getContext());
                 childView.setContainer(container);
 
-                // 为 ChildView 实施绑定
-                if (activity != null) {
-                    childViewModel.onAttach(activity);
-                } else {
-                    childViewModel.onAttach(fragment.getContext());
-                }
+                // 为 ChildView 实施绑定：ViewModel、Variables 和 UIAwareComponent
+                childViewModel.onAttach(mAncestorView.getContext());
                 bindAllDataBindingVariables(childView, childViewModel, childViewDataBinding);
                 bindUIAwareComponent(childView);
 
@@ -383,9 +457,9 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
 
                 return childView;
 
+            } else {
+                return (CV) mChildViewMap.get(childViewClass).get(containerId);
             }
-
-            return (CV) mChildViewMap.get(childViewClass).get(containerId);
         }
 
         @Override
@@ -404,8 +478,8 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
         public <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
         boolean unbindChildView(Class<CV> childViewClass, @IdRes int containerId) {
             if (mCurrentEvent == null) {
-                throw new IllegalStateException(mCoreView.getClass().getName() + ": " +
-                        "The parent View is also initialized or destroyed.");
+                throw new IllegalStateException(mAncestorView.getClass().getName() + ": " +
+                        "The parent View is also initialized.");
             }
 
             Map<Integer, ChildView> childViews = mChildViewMap.get(childViewClass);
@@ -440,8 +514,8 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
         public <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
         boolean unbindChildView(Class<CV> childViewClass) {
             if (mCurrentEvent == null) {
-                throw new IllegalStateException(mCoreView.getClass().getName() + ": " +
-                        "The parent View is also initialized or destroyed.");
+                throw new IllegalStateException(mAncestorView.getClass().getName() + ": " +
+                        "The parent View is also initialized.");
             }
 
             Map<Integer, ChildView> childViews = mChildViewMap.get(childViewClass);
@@ -561,24 +635,142 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
                 }
             }
         }
+
+        void clear() {
+            mChildViewMap.clear();
+            mAncestorView = null;
+            mParentChildView = null;
+            mChildViewMap = null;
+        }
     }
 
 
-    void bindChildViewsByAnnotation(@NonNull CoreView coreView,
-                                    @Nullable ChildView childView,
+    class ExtraViewModelViewImpl<EV extends ExtraViewModelView & CoreView>
+            implements ExtraViewModelView {
+
+        private Map<Class<? extends BaseViewModel>, BaseViewModel> mViewModelMap;
+        private EV mExtraView;
+
+
+        public ExtraViewModelViewImpl(@NonNull EV extraView) {
+            mExtraView = extraView;
+            mViewModelMap = new HashMap<>(2);
+        }
+
+        @Override
+        public <EVM extends BaseViewModel>
+        boolean containsExtraViewModel(Class<EVM> viewModelClass) {
+            return mViewModelMap.containsKey(viewModelClass);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <EVM extends BaseViewModel>
+        EVM bindExtraViewModel(Class<EVM> viewModelClass) {
+            if (mCurrentEvent == null ||
+                    mCurrentEvent.compareTo(Lifecycle.Event.ON_DESTROY) >= 0) {
+                throw new IllegalStateException(mExtraView.getClass().getName() + ": " +
+                        "The parent View is also initialized or destroyed.");
+            }
+
+            if (viewModelClass == null) {
+                return null;
+            }
+
+            if (!mViewModelMap.containsKey(viewModelClass)) {
+                if (mExtraView.getViewModel().getClass().equals(viewModelClass)) {
+                    return null;
+                }
+
+                EVM extraViewModel = (EVM) mExtraView.newViewModel(viewModelClass);
+                bindDataBindingVariables(extraViewModel, mExtraView.getDataBinding());
+                extraViewModel.onAttach(mExtraView.getContext());
+                mViewModelMap.put(viewModelClass, extraViewModel);
+
+                return extraViewModel;
+            } else {
+                return (EVM) mViewModelMap.get(viewModelClass);
+            }
+        }
+
+        @Override
+        public <EVM extends BaseViewModel>
+        boolean unbindExtraViewModel(Class<EVM> viewModelClass) {
+            if (mCurrentEvent == null) {
+                throw new IllegalStateException(mExtraView.getClass().getName() + ": " +
+                        "The parent View is also initialized or destroyed.");
+            }
+
+            BaseViewModel extraViewModel = mViewModelMap.get(viewModelClass);
+            if (extraViewModel != null) {
+                extraViewModel.onDetach();
+                mViewModelMap.remove(viewModelClass);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public boolean unbindAllExtraViewModels() {
+            if (mCurrentEvent == null) {
+                throw new IllegalStateException(mExtraView.getClass().getName() + ": " +
+                        "The parent View is also initialized or destroyed.");
+            }
+
+            if (mViewModelMap.size() > 0) {
+                for (BaseViewModel extraViewModel : mViewModelMap.values()) {
+                    extraViewModel.onDetach();
+                }
+                mViewModelMap.clear();
+
+                return true;
+            }
+
+            return false;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <EVM extends BaseViewModel>
+        EVM getExtraViewModel(Class<EVM> viewModelClass) {
+            return (EVM) mViewModelMap.get(viewModelClass);
+        }
+
+        @Override
+        public BaseViewModel[] getAllExtraViewModels() {
+            if (mViewModelMap.size() > 0) {
+                return mViewModelMap.values().toArray(new BaseViewModel[mViewModelMap.size()]);
+            } else {
+                return null;
+            }
+        }
+
+
+        void clear() {
+            mViewModelMap.clear();
+            mExtraView = null;
+            mViewModelMap = null;
+        }
+    }
+
+
+    void bindChildViewsByAnnotation(@NonNull CoreView ancestorView,
+                                    @Nullable ChildView parentChildView,
                                     @NonNull ContainerView containerView) {
-        assertCoreView(coreView);
+        assertCoreView(ancestorView);
 
         BindChildView bindChildView;
         BindChildViews bindChildViews;
 
         // 获取 BindChildView 和 BindChildViews 注解
-        if (childView != null) {
-            bindChildView = childView.getClass().getAnnotation(BindChildView.class);
-            bindChildViews = childView.getClass().getAnnotation(BindChildViews.class);
+        if (parentChildView != null) {
+            bindChildView = parentChildView.getClass().getAnnotation(BindChildView.class);
+            bindChildViews = parentChildView.getClass().getAnnotation(BindChildViews.class);
         } else {
-            bindChildView = coreView.getClass().getAnnotation(BindChildView.class);
-            bindChildViews = coreView.getClass().getAnnotation(BindChildViews.class);
+            bindChildView = ancestorView.getClass().getAnnotation(BindChildView.class);
+            bindChildViews = ancestorView.getClass().getAnnotation(BindChildViews.class);
         }
 
         // 当注解存在时，通过这些注解绑定 ChildView
@@ -601,6 +793,20 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
         boolean removeViews = bindChildView.removeViews();
 
         containerView.bindChildView(childViewClass, containerId, attachToParent, removeViews);
+    }
+
+    void bindExtraViewModelsByAnnotation(@NonNull ExtraViewModelView extraViewModelView) {
+        ExtraViewModel extraViewModel = extraViewModelView.getClass().getAnnotation(ExtraViewModel.class);
+        ExtraViewModels extraViewModels = extraViewModelView.getClass().getAnnotation(ExtraViewModels.class);
+
+        if (extraViewModel != null) {
+            extraViewModelView.bindExtraViewModel(extraViewModel.value());
+        }
+        if (extraViewModels != null) {
+            for (ExtraViewModel e : extraViewModels.value()) {
+                extraViewModelView.bindExtraViewModel(e.value());
+            }
+        }
     }
 
     private void bindAllDataBindingVariables(@NonNull CoreView coreView,
@@ -663,13 +869,13 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
 
     @SuppressWarnings("unchecked")
     @NonNull
-    private BaseViewModel createViewModel(@NonNull CoreView coreView) {
+    private BaseViewModel createMainViewModel(@NonNull CoreView coreView) {
         BaseViewModel viewModel = coreView.onCreateViewModel();
         if (viewModel == null) {
-            ViewModelType viewModelType = coreView.getClass().getAnnotation(ViewModelType.class);
-            if (viewModelType != null) {
+            MainViewModel mainViewModel = coreView.getClass().getAnnotation(MainViewModel.class);
+            if (mainViewModel != null) {
                 try {
-                    Class<? extends BaseViewModel> viewModelClass = viewModelType.value();
+                    Class<? extends BaseViewModel> viewModelClass = mainViewModel.value();
                     viewModel = mCoreView.newViewModel(viewModelClass);
                 } catch (Exception e) {
                     throw new IllegalStateException(coreView.getClass().getName() + ": " +
@@ -681,7 +887,7 @@ public class ViewProxy<VM extends BaseViewModel, DB extends ViewDataBinding>
         }
         if (viewModel == null) {
             throw new IllegalStateException(coreView.getClass().getName() + ": " +
-                    "You didn't build ViewModel! You can choose to use ViewModelType annotation or newViewModel " +
+                    "You didn't build ViewModel! You can choose to use MainViewModel annotation or newViewModel " +
                     "() method to build ViewModel for View.");
         }
 

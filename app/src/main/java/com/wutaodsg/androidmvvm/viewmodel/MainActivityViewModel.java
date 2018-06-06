@@ -8,7 +8,7 @@ import com.wutaodsg.androidmvvm.model.UserInfoConfirmUtil;
 import com.wutaodsg.androidmvvm.model.UserLoginUtil;
 import com.wutaodsg.mvvm.command.UICommand;
 import com.wutaodsg.mvvm.core.BaseViewModel;
-import com.wutaodsg.mvvm.core.BindVariable;
+import com.wutaodsg.mvvm.core.annotation.BindVariable;
 
 
 /**
@@ -49,37 +49,26 @@ public class MainActivityViewModel extends BaseViewModel {
     public void login(final UICommand loginUICommand) {
         if (NetworkUtil.hasNetwork(getContext())) {
             if (UserInfoConfirmUtil.isRegisteredUserNameAndPassword(mUserName.get(), mPassword.get())) {
-                loginUICommand.callOnStart();
+                loginUICommand.onStart();
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             UserLoginUtil.login(mUserName.get(), mPassword.get());
                         } catch (InterruptedException e) {
-                            loginUICommand.callHandler(new Runnable() {
-                                @Override
-                                public void run() {
-                                    loginUICommand.callExecutionStatus(false);
-                                    mErrorMessage.set(ERROR_MESSAGE_USER_LOGIN_FAILED);
-                                }
-                            });
+                            loginUICommand.executionStatus(false);
+                            mErrorMessage.set(ERROR_MESSAGE_USER_LOGIN_FAILED);
                         }
-
-                        loginUICommand.callHandler(new Runnable() {
-                            @Override
-                            public void run() {
-                                loginUICommand.callExecutionStatus(true);
-                                mErrorMessage.set("");
-                            }
-                        });
+                        loginUICommand.executionStatus(true);
+                        mErrorMessage.set("");
                     }
                 }).start();
             } else {
-                loginUICommand.callEnabled(false);
+                loginUICommand.enabled(false);
                 mErrorMessage.set(ERROR_MESSAGE_INVALID_INPUT);
             }
         } else {
-            loginUICommand.callEnabled(false);
+            loginUICommand.enabled(false);
             mErrorMessage.set(ERROR_MESSAGE_NO_NETWORK);
         }
     }

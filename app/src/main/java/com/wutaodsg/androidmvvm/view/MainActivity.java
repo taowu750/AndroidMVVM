@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.Toast;
@@ -19,21 +18,20 @@ import com.wutaodsg.mvvm.command.Function0;
 import com.wutaodsg.mvvm.command.ReplyCommand;
 import com.wutaodsg.mvvm.command.UICommand;
 import com.wutaodsg.mvvm.core.BaseMVVMActivity;
-import com.wutaodsg.mvvm.core.BindVariable;
-import com.wutaodsg.mvvm.core.ViewModelType;
+import com.wutaodsg.mvvm.core.annotation.BindVariable;
+import com.wutaodsg.mvvm.core.annotation.MainViewModel;
 
 
 /**
  * View 层只关心 UI，以及命令绑定（Command Binding）。View 将其他操作交由 ViewModel 处理，
  * 自己只需调用这些操作即可。
  */
-@ViewModelType(MainActivityViewModel.class)
+@MainViewModel(MainActivityViewModel.class)
 public class MainActivity extends BaseMVVMActivity<MainActivityViewModel, ActivityMainBinding> {
 
     private AlertDialog mLoginWaitingDialog;
 
     private UICommand mLoginCommand = new UICommand.Builder()
-            .setHandler(new Handler())
             .setEnabled(new Action1<Boolean>() {
                 @Override
                 public void execute(Boolean enabled) {

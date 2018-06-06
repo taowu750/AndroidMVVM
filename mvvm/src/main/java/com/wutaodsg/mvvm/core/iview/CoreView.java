@@ -1,12 +1,16 @@
-package com.wutaodsg.mvvm.core;
+package com.wutaodsg.mvvm.core.iview;
 
 import android.arch.lifecycle.LifecycleOwner;
+import android.content.Context;
 import android.databinding.ViewDataBinding;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
+
+import com.wutaodsg.mvvm.core.BaseViewModel;
+import com.wutaodsg.mvvm.core.annotation.MainViewModel;
 
 /**
  * 扩展了 BaseView 接口的功能，从而和 ViewModel、DataBinding 具有了更多的联系。
@@ -25,7 +29,7 @@ public interface CoreView<VM extends BaseViewModel, DB extends ViewDataBinding>
      * 对象（需要注意的是，此对象必须是 SVM 泛型指定的类型）。
      * <p>
      * 这个方法创建的 ViewModel 在不为 null 的情况下，将会被优先绑定到 View 对象中.
-     * 也就是说使用 {@link ViewModelType} 注解指定的 ViewModel 会被此方法创建的
+     * 也就是说使用 {@link MainViewModel} 注解指定的 ViewModel 会被此方法创建的
      * ViewModel 覆盖掉。
      * <p>
      * 此方法返回值可以为 null。
@@ -70,9 +74,16 @@ public interface CoreView<VM extends BaseViewModel, DB extends ViewDataBinding>
     LayoutInflater getLayoutInflater();
 
     /**
+     * 获取 Context。
+     *
+     * @return Context 对象
+     */
+    Context getContext();
+
+    /**
      * 创建一个 SVM 类型的 ViewModel 对象。这个方法要求 ViewModel 必须具有默认构造器，
      * 否则会抛出异常。<br/>
-     * 这个 ViewModel 将会绑定到 CoreView 上。
+     * 这个 ViewModel 不会绑定到 View 上。
      *
      * @param viewModelClass ViewModel 的类型
      * @return SVM 的对象

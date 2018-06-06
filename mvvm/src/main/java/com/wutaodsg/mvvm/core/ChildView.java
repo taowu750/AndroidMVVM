@@ -13,6 +13,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.wutaodsg.mvvm.core.annotation.BindChildView;
+import com.wutaodsg.mvvm.core.annotation.BindChildViews;
+import com.wutaodsg.mvvm.core.iview.ContainerView;
+import com.wutaodsg.mvvm.core.iview.CoreView;
+import com.wutaodsg.mvvm.core.iview.ExtraViewModelView;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -61,12 +67,17 @@ import java.lang.annotation.Target;
  * 也可以使用 {@link ContainerView} 的方法进行<em>动态绑定</em>。
  * </p>
  * <p>
+ * ChildView 可以绑定额外的 ViewModel，通过使用 {@link com.wutaodsg.mvvm.core.annotation.ExtraViewModel}
+ * 、{@link com.wutaodsg.mvvm.core.annotation.ExtraViewModels} 注解声明
+ * 或使用 {@link #bindExtraViewModel(Class)} 方法动态绑定。
+ * </p>
+ * <p>
  * 需要注意的是，ChildView 必须有一个无参构造器，否则框架将无法正确的构造它。
  * </p>
  */
 
 public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBinding>
-        implements CoreView<VM, DB>, ContainerView {
+        implements CoreView<VM, DB>, ContainerView, ExtraViewModelView {
 
     /**
      * 父 View 为 {@link BaseMVVMActivity} 的子类
@@ -93,6 +104,7 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
 
     private ViewProxy mViewProxy;
     private ViewProxy.ContainerViewImpl mContainerView;
+    private ViewProxy.ExtraViewModelViewImpl mExtraViewModelView;
 
     @ParentType
     private int mParentType;
@@ -108,6 +120,7 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
     }
 
 
+    @SuppressWarnings("unchecked")
     @CallSuper
     public void onCreate(Bundle savedInstanceState) {
         if (mViewModel == null ||
@@ -129,6 +142,9 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
 
         mContainerView = mViewProxy.new ContainerViewImpl(coreView, this);
         mViewProxy.bindChildViewsByAnnotation(coreView, this, mContainerView);
+
+        mExtraViewModelView = mViewProxy.new ExtraViewModelViewImpl(this);
+        mViewProxy.bindExtraViewModelsByAnnotation(this);
     }
 
     @CallSuper
@@ -156,6 +172,7 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
         beforeDetach();
 
         mContainerView.unbindAllChildViews();
+        mContainerView.clear();
         mContainerView = null;
 
         mViewModel.onDetach();
@@ -166,6 +183,10 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
         mViewProxy = null;
         mContext = null;
         mContainer = null;
+
+        mExtraViewModelView.unbindAllExtraViewModels();
+        mExtraViewModelView.clear();
+        mExtraViewModelView = null;
     }
 
     @NonNull
@@ -299,6 +320,39 @@ public abstract class ChildView<VM extends BaseViewModel, DB extends ViewDataBin
     @Override
     public final ChildView[] getChildViews() {
         return mContainerView.getChildViews();
+    }
+
+
+    @Override
+    public <EVM extends BaseViewModel> boolean containsExtraViewModel(Class<EVM> viewModelClass) {
+        return mExtraViewModelView.containsExtraViewModel(viewModelClass);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <EVM extends BaseViewModel> EVM bindExtraViewModel(Class<EVM> viewModelClass) {
+        return (EVM) mExtraViewModelView.bindExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public <EVM extends BaseViewModel> boolean unbindExtraViewModel(Class<EVM> viewModelClass) {
+        return mExtraViewModelView.unbindExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public boolean unbindAllExtraViewModels() {
+        return mExtraViewModelView.unbindAllExtraViewModels();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <EVM extends BaseViewModel> EVM getExtraViewModel(Class<EVM> viewModelClass) {
+        return (EVM) mExtraViewModelView.getExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public BaseViewModel[] getAllExtraViewModels() {
+        return mExtraViewModelView.getAllExtraViewModels();
     }
 
 

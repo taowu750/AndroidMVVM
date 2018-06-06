@@ -4,7 +4,7 @@ import android.databinding.ObservableField;
 
 import com.android.databinding.library.baseAdapters.BR;
 import com.wutaodsg.mvvm.core.BaseViewModel;
-import com.wutaodsg.mvvm.core.BindVariable;
+import com.wutaodsg.mvvm.core.annotation.BindVariable;
 
 
 /**

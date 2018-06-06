@@ -9,20 +9,25 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * <p>
- *     用来控制日志打印行为的类，可以控制某个级别以下的日志不会被打印出来，
- *     甚至可以关闭所有的日志打印。
+ * 用来控制日志打印行为的类，可以控制某个级别以下的日志不会被打印出来，
+ * 甚至可以关闭所有的日志打印。
  * </p>
  * <p>
- *     它还可以为你的日志 tag 前面加上一个前缀，通过在日志过滤器中设置这个前缀，
- *     你可以看到所有具有这个前缀的日志。
+ * 它还可以为你的日志 tag 前面加上一个前缀，通过在日志过滤器中设置这个前缀，
+ * 你可以看到所有具有这个前缀的日志。
  * </p>
  * <p>
- *     这个日志工具还可以不打印某些日志以及只打印某些日志。
+ * 这个日志工具还可以不打印某些日志以及只打印某些日志。
+ * </p>
+ * <p>
+ * 需要注意的是，{@link #addExcludedTag(String)}、{@link #removeExcludedTag(String)}、
+ * {@link #addSpecificTag(String)} 和 {@link #removeSpecificTag(String)} 这些方法
+ * 不是线程安全的，最好在 MainActivity 或自定义 Application 类中配置这些数据。
  * </p>
  */
 
@@ -52,10 +57,10 @@ public class LogUtils {
     public static String tagPrefix;
 
 
-    private static List<String> sExcludedTags = new CopyOnWriteArrayList<>();
+    private static List<String> sExcludedTags = new ArrayList<>();
 
     private static volatile boolean sIsSpecific = false;
-    private static List<String> sSpecificTags = new CopyOnWriteArrayList<>();
+    private static List<String> sSpecificTags = new ArrayList<>();
 
 
     private LogUtils() {
@@ -265,5 +270,6 @@ public class LogUtils {
     @Retention(RetentionPolicy.CLASS)
     @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
     @IntDef({VERBOSE, DEBUG, INFO, WARN, ERROR, NOTHING})
-    @interface LogLevelType {}
+    @interface LogLevelType {
+    }
 }

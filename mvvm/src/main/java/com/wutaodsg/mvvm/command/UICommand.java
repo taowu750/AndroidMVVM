@@ -1,7 +1,7 @@
 package com.wutaodsg.mvvm.command;
 
 import android.os.Handler;
-import android.os.Message;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
@@ -24,9 +24,8 @@ import com.wutaodsg.mvvm.core.UIAwareComponent;
  * 4. executionStatus：ViewModel 通过调用 executionSuccess 传递 Function 是否执行成功的信息。<br/>
  * 5. executionResult: ViewModel 通过 executionResult 传递 Function 的执行结果。
  * <p>
- * 需要注意的是，UICommand 中的所有动作都必须在 Android 主线程中进行。
- * 当 Function 中的有些操作需要在非 UI 线程中执行时，你可以通过为这个 UICommand 设置 Handler，
- * 从而让 Function 可以将所有的 UI 操作放到主线程中执行。
+ * 默认情况下，UICommand 中的所有动作都在 Android 主线程中进行。你可以通过为这个 UICommand
+ * 设置 Handler，从而让它在你想要的线程中工作，不过这样不推荐。
  * <p>
  * UICommand 通过 Builder 创建，所以你可以选择想要传递的动作。
  * <p>
@@ -114,39 +113,84 @@ public class UICommand<RESULT, PROGRESS> implements UIAwareComponent {
     }
 
 
-    public void callHandler(@NonNull Runnable action) {
+    public void postHanlder(Runnable runnable) {
         if (mHandler != null) {
-            Message.obtain(mHandler, action).sendToTarget();
+            mHandler.post(runnable);
         }
     }
 
-    public void callEnabled(boolean enabled) {
+    public void enabled(final boolean enabled) {
         if (mEnabled != null) {
-            mEnabled.execute(enabled);
+            if (mHandler != null) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mEnabled.execute(enabled);
+                    }
+                });
+            } else {
+                mEnabled.execute(enabled);
+            }
         }
     }
 
-    public void callOnStart() {
+    public void onStart() {
         if (mOnStart != null) {
-            mOnStart.execute();
+            if (mHandler != null) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mOnStart.execute();
+                    }
+                });
+            } else {
+                mOnStart.execute();
+            }
         }
     }
 
-    public void callOnProgress(@NonNull PROGRESS progress) {
+    public void onProgress(@NonNull final PROGRESS progress) {
         if (mOnProgress != null) {
-            mOnProgress.execute(progress);
+            if (mHandler != null) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mOnProgress.execute(progress);
+                    }
+                });
+            } else {
+                mOnProgress.execute(progress);
+            }
         }
     }
 
-    public void callExecutionStatus(boolean executionStatus) {
+    public void executionStatus(final boolean executionStatus) {
         if (mExecutionStatus != null) {
-            mExecutionStatus.execute(executionStatus);
+            if (mHandler != null) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mExecutionStatus.execute(executionStatus);
+                    }
+                });
+            } else {
+                mExecutionStatus.execute(executionStatus);
+            }
         }
     }
 
-    public void callExecutionResult(@NonNull RESULT result) {
+    public void executionResult(@NonNull final RESULT result) {
         if (mExecutionResult != null) {
-            mExecutionResult.execute(result);
+            if (mHandler != null) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mExecutionResult.execute(result);
+                    }
+                });
+            } else {
+                mExecutionResult.execute(result);
+            }
         }
     }
 
@@ -173,19 +217,20 @@ public class UICommand<RESULT, PROGRESS> implements UIAwareComponent {
             mStore.put(3, mOnProgress);
             mStore.put(4, mExecutionStatus);
             mStore.put(5, mExecutionResult);
+
+            mHandler = null;
+            mEnabled = null;
+            mOnStart = null;
+            mOnProgress = null;
+            mExecutionStatus = null;
+            mExecutionResult = null;
         }
-        mHandler = null;
-        mEnabled = null;
-        mOnStart = null;
-        mOnProgress = null;
-        mExecutionStatus = null;
-        mExecutionResult = null;
     }
 
 
     public static class Builder<RESULT, PROGRESS> {
 
-        private Handler mHandler;
+        private Handler mHandler = new Handler(Looper.getMainLooper());
         private Action1<Boolean> mEnabled;
         private Action0 mOnStart;
         private Action1<PROGRESS> mOnProgress;

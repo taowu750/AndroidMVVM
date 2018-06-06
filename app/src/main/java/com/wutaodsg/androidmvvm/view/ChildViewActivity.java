@@ -11,12 +11,12 @@ import com.wutaodsg.androidmvvm.viewmodel.ChildViewActivityVM;
 import com.wutaodsg.mvvm.command.Function1;
 import com.wutaodsg.mvvm.command.ResponseCommand;
 import com.wutaodsg.mvvm.core.BaseMVVMActivity;
-import com.wutaodsg.mvvm.core.BindVariable;
-import com.wutaodsg.mvvm.core.ViewModelType;
+import com.wutaodsg.mvvm.core.annotation.BindVariable;
+import com.wutaodsg.mvvm.core.annotation.MainViewModel;
 import com.wutaodsg.mvvm.util.log.LogUtils;
 
 
-@ViewModelType(ChildViewActivityVM.class)
+@MainViewModel(ChildViewActivityVM.class)
 //@BindChildView(type = NavHeaderView.class, container = R.id.nav_view)
 public class ChildViewActivity extends BaseMVVMActivity<ChildViewActivityVM, ActivityChildViewBinding> {
 

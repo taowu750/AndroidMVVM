@@ -16,6 +16,10 @@ import android.support.annotation.NonNull;
  * <p>
  * 我们需要把界面上的数据绑定（Data Binding）、依赖属性（Dependency）放在 ViewModel 中。并向
  * View 提供关于这些数据和属性状态改变时所发生事件的 functions。
+ * <p>
+ * BaseViewModel 的 {@link #onCleared()} 方法只有在与之关联的 Activity 或 Fragment
+ * 完全销毁后才会被调用。
+ * </p>
  */
 
 public class BaseViewModel extends ViewModel {

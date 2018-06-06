@@ -1,6 +1,10 @@
-package com.wutaodsg.mvvm.core;
+package com.wutaodsg.mvvm.core.annotation;
 
 import android.support.annotation.IdRes;
+
+import com.wutaodsg.mvvm.core.BaseMVVMActivity;
+import com.wutaodsg.mvvm.core.BaseMVVMFragment;
+import com.wutaodsg.mvvm.core.ChildView;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;

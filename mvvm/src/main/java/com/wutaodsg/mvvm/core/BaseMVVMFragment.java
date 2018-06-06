@@ -13,6 +13,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.wutaodsg.mvvm.core.annotation.BindChildView;
+import com.wutaodsg.mvvm.core.annotation.BindChildViews;
+import com.wutaodsg.mvvm.core.annotation.BindVariable;
+import com.wutaodsg.mvvm.core.iview.ContainerView;
+import com.wutaodsg.mvvm.core.iview.CoreView;
+import com.wutaodsg.mvvm.core.iview.ExtraViewModelView;
+
 /**
  * 作为 MVVM 模式 V 层中的基类 Fragment。
  * <p>
@@ -34,10 +41,16 @@ import android.view.ViewGroup;
  * 典型的，当一个 Activity 界面上有两个 Fragment，其中一个 Fragment 想要获取到另一个 Fragment
  * 的 ViewModel 对象，那么它就不可以在自己的 {@link #onActivityCreated(Bundle)} 方法
  * 中进行这样的操作，因为这个时候，不能够保证另一个 Fragment 已经绑定成功。
+ * <p>
+ * BaseMVVMFragment 可以绑定额外的 ViewModel，通过使用
+ * {@link com.wutaodsg.mvvm.core.annotation.ExtraViewModel}、
+ * {@link com.wutaodsg.mvvm.core.annotation.ExtraViewModels} 注解声明
+ * 或使用 {@link #bindExtraViewModel(Class)} 方法动态绑定。
+ * </p>
  */
 
 public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends ViewDataBinding>
-        extends Fragment implements CoreView<VM, DB>, ContainerView {
+        extends Fragment implements CoreView<VM, DB>, ContainerView, ExtraViewModelView {
 
     ViewProxy<VM, DB> mViewProxy;
 
@@ -169,6 +182,7 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
         return ViewModelProviders.of(this).get(viewModelClass);
     }
 
+
     @Override
     public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
     boolean containsChildView(Class<CV> childViewClass, @IdRes int containerId) {
@@ -246,6 +260,47 @@ public abstract class BaseMVVMFragment<VM extends BaseViewModel, DB extends View
     public final ChildView[] getChildViews() {
         assertViewProxy();
         return mViewProxy.getChildViews();
+    }
+
+
+    @Override
+    public <EVM extends BaseViewModel>
+    boolean containsExtraViewModel(Class<EVM> viewModelClass) {
+        assertViewProxy();
+        return mViewProxy.containsExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public <EVM extends BaseViewModel>
+    EVM bindExtraViewModel(Class<EVM> viewModelClass) {
+        assertViewProxy();
+        return mViewProxy.bindExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public <EVM extends BaseViewModel>
+    boolean unbindExtraViewModel(Class<EVM> viewModelClass) {
+        assertViewProxy();
+        return mViewProxy.unbindExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public boolean unbindAllExtraViewModels() {
+        assertViewProxy();
+        return mViewProxy.unbindAllChildViews();
+    }
+
+    @Override
+    public <EVM extends BaseViewModel>
+    EVM getExtraViewModel(Class<EVM> viewModelClass) {
+        assertViewProxy();
+        return mViewProxy.getExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public BaseViewModel[] getAllExtraViewModels() {
+        assertViewProxy();
+        return mViewProxy.getAllExtraViewModels();
     }
 
 

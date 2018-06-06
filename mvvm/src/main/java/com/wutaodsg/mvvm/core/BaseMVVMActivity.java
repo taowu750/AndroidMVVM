@@ -2,6 +2,7 @@ package com.wutaodsg.mvvm.core;
 
 import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
@@ -10,33 +11,46 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import com.wutaodsg.mvvm.core.annotation.BindChildView;
+import com.wutaodsg.mvvm.core.annotation.BindChildViews;
+import com.wutaodsg.mvvm.core.annotation.BindVariable;
+import com.wutaodsg.mvvm.core.iview.ContainerView;
+import com.wutaodsg.mvvm.core.iview.CoreView;
+import com.wutaodsg.mvvm.core.iview.ExtraViewModelView;
+
 /**
  * <p>
- *     作为 MVVM 模式 V 层中的基类 Activity。
+ * 作为 MVVM 模式 V 层中的基类 Activity。
  * </p>
  * <p>
- *     它不仅仅作为 View 对象，也是一个弱化的控制器（Controller），所以我们需要把界面上
- *     控件的命令（Command）放在它里面。
+ * 它不仅仅作为 View 对象，也是一个弱化的控制器（Controller），所以我们需要把界面上
+ * 控件的命令（Command）放在它里面。
  * </p>
  * <p>
- *     它会在 {@link #onCreate(Bundle)} 阶段绑定 ViewModel 和 DataBinding，将在它内部声明的
- *     {@link com.wutaodsg.mvvm.command.ReplyCommand} 或 {@link com.wutaodsg.mvvm.command.ResponseCommand}
- *     绑定到界面中（前提是这些 Command 上正确的使用 {@link BindVariable} 指定了 DataBinding Variable）。<br/>
- *     此外，它还会检查是否有 {@link UIAwareComponent} 域，如果有，就将它们绑定到自己的生命周期中。
+ * 它会在 {@link #onCreate(Bundle)} 阶段绑定 ViewModel 和 DataBinding，将在它内部声明的
+ * {@link com.wutaodsg.mvvm.command.ReplyCommand} 或 {@link com.wutaodsg.mvvm.command.ResponseCommand}
+ * 绑定到界面中（前提是这些 Command 上正确的使用 {@link BindVariable} 指定了 DataBinding Variable）。<br/>
+ * 此外，它还会检查是否有 {@link UIAwareComponent} 域，如果有，就将它们绑定到自己的生命周期中。
  * </p>
  * <p>
- *     可以使用 {@link BindChildView} 或 {@link BindChildViews} 注解声明子 View，
- *     详细信息参见 {@link ChildView}。
+ * 可以使用 {@link BindChildView} 或 {@link BindChildViews} 注解声明子 View，
+ * 详细信息参见 {@link ChildView}。
  * </p>
  * <p>
- *     需要注意的是，由于 BaseMVVMActivity 在自己的 {@link #onCreate(Bundle)} 方法结束后，
- *     绑定过程才会结束，所以在这个回调方法结束之前，不可以使用 {@link #getViewModel()} 或
- *     {@link #getDataBinding()} 方法，否则会抛出异常。
+ * 需要注意的是，由于 BaseMVVMActivity 在自己的 {@link #onCreate(Bundle)} 方法结束后，
+ * 绑定过程才会结束，所以在这个回调方法结束之前，不可以使用 {@link #getViewModel()} 或
+ * {@link #getDataBinding()} 等方法，否则会抛出异常。
+ * </p>
+ * <p>
+ * BaseMVVMActivity 可以绑定额外的 ViewModel，通过使用
+ * {@link com.wutaodsg.mvvm.core.annotation.ExtraViewModel}、
+ * {@link com.wutaodsg.mvvm.core.annotation.ExtraViewModels} 注解声明
+ * 或使用 {@link #bindExtraViewModel(Class)} 方法动态绑定。
  * </p>
  */
 
 public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends ViewDataBinding>
-        extends AppCompatActivity implements CoreView<VM, DB>, ContainerView {
+        extends AppCompatActivity implements CoreView<VM, DB>, ContainerView, ExtraViewModelView {
 
     ViewProxy<VM, DB> mViewProxy;
 
@@ -150,9 +164,15 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     }
 
     @Override
+    public Context getContext() {
+        return this;
+    }
+
+    @Override
     public final <SVM extends BaseViewModel> SVM newViewModel(Class<SVM> viewModelClass) {
         return ViewModelProviders.of(this).get(viewModelClass);
     }
+
 
     @Override
     public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
@@ -171,9 +191,9 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     @Override
     public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
     CV bindChildView(Class<CV> childViewClass,
-                          @IdRes int containerId,
-                          boolean attachToParent,
-                          boolean removeViews) {
+                     @IdRes int containerId,
+                     boolean attachToParent,
+                     boolean removeViews) {
         assertViewProxy();
         return mViewProxy.bindChildView(childViewClass, containerId, attachToParent, removeViews);
     }
@@ -181,7 +201,7 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     @Override
     public final <CVM extends BaseViewModel, CDB extends ViewDataBinding, CV extends ChildView<CVM, CDB>>
     CV bindChildView(Class<CV> childViewClass, @IdRes int containerId,
-                          boolean attachToParent) {
+                     boolean attachToParent) {
         assertViewProxy();
         return mViewProxy.bindChildView(childViewClass, containerId, attachToParent);
     }
@@ -231,6 +251,47 @@ public abstract class BaseMVVMActivity<VM extends BaseViewModel, DB extends View
     public final ChildView[] getChildViews() {
         assertViewProxy();
         return mViewProxy.getChildViews();
+    }
+
+
+    @Override
+    public <EVM extends BaseViewModel>
+    boolean containsExtraViewModel(Class<EVM> viewModelClass) {
+        assertViewProxy();
+        return mViewProxy.containsExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public <EVM extends BaseViewModel>
+    EVM bindExtraViewModel(Class<EVM> viewModelClass) {
+        assertViewProxy();
+        return mViewProxy.bindExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public <EVM extends BaseViewModel>
+    boolean unbindExtraViewModel(Class<EVM> viewModelClass) {
+        assertViewProxy();
+        return mViewProxy.unbindExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public boolean unbindAllExtraViewModels() {
+        assertViewProxy();
+        return mViewProxy.unbindAllChildViews();
+    }
+
+    @Override
+    public <EVM extends BaseViewModel>
+    EVM getExtraViewModel(Class<EVM> viewModelClass) {
+        assertViewProxy();
+        return mViewProxy.getExtraViewModel(viewModelClass);
+    }
+
+    @Override
+    public BaseViewModel[] getAllExtraViewModels() {
+        assertViewProxy();
+        return mViewProxy.getAllExtraViewModels();
     }
 
 

@@ -13,8 +13,8 @@ import com.wutaodsg.mvvm.command.Action0;
 import com.wutaodsg.mvvm.command.Action1;
 import com.wutaodsg.mvvm.command.ReplyCommand;
 import com.wutaodsg.mvvm.core.BaseMVVMFragment;
-import com.wutaodsg.mvvm.core.BindVariable;
-import com.wutaodsg.mvvm.core.ViewModelType;
+import com.wutaodsg.mvvm.core.annotation.BindVariable;
+import com.wutaodsg.mvvm.core.annotation.MainViewModel;
 import com.wutaodsg.mvvm.util.log.LogUtils;
 import com.wutaodsg.mvvm.util.vmeventbus.ViewModelEventBus;
 
@@ -23,7 +23,7 @@ import com.wutaodsg.mvvm.util.vmeventbus.ViewModelEventBus;
  * Created by wutao on 2018/4/5.
  */
 
-@ViewModelType(TopFragmentViewModel.class)
+@MainViewModel(TopFragmentViewModel.class)
 public class TopFragment extends BaseMVVMFragment<TopFragmentViewModel, FragmentTopBinding> {
 
     private static final String TAG = "TopFragment";
